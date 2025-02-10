@@ -1,0 +1,435 @@
+/* Add all the CSS you provided */
+
+/* Reset and Global Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Inter', 'Segoe UI', sans-serif;
+}
+
+:root {
+    --primary-color: #6366f1;
+    --secondary-color: #4f46e5;
+    --accent-color: #818cf8;
+    --background-dark: #0f172a;
+    --background-light: #f8fafc;
+    --text-dark: #1e293b;
+    --text-light: #f8fafc;
+    --success-color: #22c55e;
+}
+
+body {
+    background-color: var(--background-light);
+    color: var(--text-dark);
+    line-height: 1.6;
+}
+
+/* Header Styles */
+.main-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: white;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+    z-index: 1000;
+    padding: 1rem 2rem;
+    transition: transform 0.3s ease-in-out;
+}
+
+.header-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+/* Rest of your CSS... */
+
+/* Add all the remaining CSS sections here */
+
+/* Logo and Navigation */
+.logo {
+    text-decoration: none;
+    font-size: 24px;
+    color: #000;
+}
+
+.pi {
+    color: #6C63FF;
+}
+
+.nav-links {
+    display: flex;
+    gap: 2rem;
+}
+
+.nav-links a {
+    text-decoration: none;
+    color: #000;
+}
+
+/* Auth Buttons */
+.auth-buttons {
+    display: flex;
+    gap: 12px;
+}
+
+.login-btn, .signup-btn {
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.login-btn {
+    background: #6c63ff;
+    color: white;
+    border: none;
+}
+
+.signup-btn {
+    background: white;
+    color: #6c63ff;
+    border: 1px solid #6c63ff;
+}
+
+/* Hero Section */
+.hero-section {
+    position: relative;
+    overflow: hidden;
+    padding: 100px 0;
+    min-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+.main-title {
+    font-size: 3.5rem;
+    margin-bottom: 1rem;
+    z-index: 1;
+}
+
+.highlight {
+    color: #6c63ff;
+}
+
+.subtitle {
+    font-size: 1.5rem;
+    color: #666;
+    margin-bottom: 2rem;
+    z-index: 1;
+}
+
+/* Search Container */
+.search-container {
+    position: relative;
+    max-width: 600px;
+    width: 90%;
+    margin: 0 auto 2rem;
+    z-index: 1;
+}
+
+.search-input {
+    width: 100%;
+    padding: 15px 20px;
+    border-radius: 30px;
+    border: 1px solid #ddd;
+    font-size: 1rem;
+    padding-right: 50px;
+}
+
+.search-button {
+    position: absolute;
+    right: 5px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: #6c63ff;
+    border: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    color: white;
+    cursor: pointer;
+}
+
+/* Hero Buttons */
+.hero-buttons {
+    display: flex;
+    gap: 20px;
+    margin-top: 1rem;
+    z-index: 1;
+}
+
+.cta-button.primary {
+    background: #6c63ff;
+    color: white;
+    padding: 12px 30px;
+    border-radius: 25px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: background 0.3s ease;
+}
+
+.cta-button.secondary {
+    background: #7e57c2;
+    color: white;
+    padding: 12px 30px;
+    border-radius: 25px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: background 0.3s ease;
+}
+
+/* Features Section */
+.features {
+    padding: 6rem 2rem;
+    background: #f8fafc;
+}
+
+.features h2 {
+    text-align: center;
+    margin-bottom: 3rem;
+    font-size: 2.5rem;
+}
+
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.feature-card {
+    text-align: center;
+    padding: 2rem;
+}
+
+/* Dark Mode */
+.dark-mode {
+    background-color: #1a1a1a;
+    color: #ffffff;
+}
+
+.dark-mode .main-header {
+    background-color: #2d2d2d;
+}
+
+.dark-mode-toggle {
+    background: none;
+    border: none;
+    color: inherit;
+    cursor: pointer;
+    padding: 8px;
+}
+
+/* Animations */
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0) rotate(0) scale(1);
+    }
+    50% {
+        transform: translateY(-30px) rotate(15deg) scale(1.05);
+    }
+}
+
+/* Wave Background */
+.wave-background {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    z-index: -1;
+}
+
+.wave {
+    position: absolute;
+    width: 250%;
+    height: 120%;
+    background: linear-gradient(to bottom, rgba(0,166,81,0.08), rgba(0,166,81,0.03));
+    border-radius: 50%;
+    filter: blur(2px);
+}
+
+/* Floating Math Elements */
+.floating-math {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    z-index: -1;
+}
+
+.math-element, .code-element {
+    position: absolute;
+    font-size: 3.5rem;
+    animation: float 6s ease-in-out infinite;
+    text-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .main-title {
+        font-size: 2.5rem;
+    }
+    
+    .hero-buttons {
+        flex-direction: column;
+    }
+    
+    .nav-links {
+        display: none;
+    }
+}
+
+/* Modal Styles */
+.auth-modal {
+    display: flex;  /* Changed from 'none' since we're using conditional rendering */
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1001;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.3s ease;
+}
+
+.auth-container {
+    background: white;
+    width: 400px;
+    border-radius: 8px;
+    position: relative;
+    padding: 32px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    animation: slideUp 0.3s ease;
+}
+
+.close-btn {
+    position: absolute;
+    right: 16px;
+    top: 16px;
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #666;
+    padding: 4px;
+    line-height: 1;
+    transition: all 0.2s ease;
+}
+
+.close-btn:hover {
+    color: #333;
+    transform: scale(1.1);
+}
+
+.auth-title {
+    font-size: 20px;
+    margin-bottom: 24px;
+    color: #1c1d1f;
+    text-align: center;
+}
+
+.auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.auth-form input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 15px;
+    transition: all 0.2s ease;
+}
+
+.auth-form input:focus {
+    border-color: #6c63ff;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(108, 99, 255, 0.1);
+}
+
+.submit-btn {
+    background: #6c63ff;
+    color: white;
+    border: none;
+    padding: 12px;
+    border-radius: 4px;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.submit-btn:hover {
+    background: #5b54d6;
+}
+
+.auth-footer {
+    text-align: center;
+    margin-top: 24px;
+}
+
+.auth-footer button {
+    background: none;
+    border: none;
+    color: #6c63ff;
+    cursor: pointer;
+    font-size: inherit;
+    padding: 0;
+    margin: 0;
+}
+
+/* Modal Animations */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideUp {
+    from { 
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to { 
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Toast Customization */
+.Toastify__toast {
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.Toastify__toast--success {
+  background: #10B981;
+}
+
+.Toastify__toast--error {
+  background: #EF4444;
+}
+
+.Toastify__toast-body {
+  font-family: 'Inter', 'Segoe UI', sans-serif;
+  font-size: 14px;
+}
+
+.Toastify__progress-bar {
+  height: 3px;
+}
