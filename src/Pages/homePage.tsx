@@ -34,9 +34,9 @@ const HomePage: React.FC = () => {
   const handleSearchInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.toLowerCase();
     setSearchValue(value);
-    
+
     if (value.length > 0) {
-      const filtered = sampleSuggestions.filter(suggestion => 
+      const filtered = sampleSuggestions.filter(suggestion =>
         suggestion.toLowerCase().includes(value)
       );
       setSuggestions(filtered);
@@ -47,22 +47,34 @@ const HomePage: React.FC = () => {
 
   // Typing effect
   useEffect(() => {
-    if (subtitleRef.current) {
-      const text = "Where Mathematics Meets Programming";
-      let index = 0;
-      subtitleRef.current.textContent = '';
-      
-      const typeWriter = () => {
-        if (index < text.length && subtitleRef.current) {
-          subtitleRef.current.textContent += text.charAt(index);
-          index++;
-          setTimeout(typeWriter, 50);
-        }
-      };
+    if (!subtitleRef.current) return;
 
-      setTimeout(typeWriter, 1000);
+    const text = "Where Mathematics Meets Programming";
+    const speed = 50; // Adjust the speed as needed
+    const delay = 800; // Initial delay before typing starts
+
+    let index = 0;
+    let timeoutId: NodeJS.Timeout | null = null;
+
+    const typeWriter = () => {
+      if (index >= text.length) return;
+
+      if (subtitleRef.current) {
+        subtitleRef.current.textContent += text.charAt(index);
+      }
+      index++;
+      timeoutId = setTimeout(typeWriter, speed);
+    };
+
+    if (subtitleRef.current) {
+      subtitleRef.current.textContent = '';
     }
-  }, []);
+    timeoutId = setTimeout(typeWriter, delay);
+
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, [subtitleRef]);
 
   // Intersection Observer for fade-in animations
   useEffect(() => {
@@ -116,7 +128,7 @@ const HomePage: React.FC = () => {
 
   return (
     <div className={`home-page ${darkMode ? 'dark-mode' : ''}`}>
-      <Navbar 
+      <Navbar
         darkMode={darkMode}
         setDarkMode={setDarkMode}
         setShowLoginModal={setShowLoginModal}
@@ -134,12 +146,12 @@ const HomePage: React.FC = () => {
             <div key={num} className={`wave wave${num}`} />
           ))}
         </div>
-        
+
         <div className="floating-math">
           {['∫', '∑', 'π', '√', '∞', 'λ', 'θ', 'def', '{}', 'for', '</>', '∂', '±', 'class', '∈']
             .map((symbol, index) => (
-              <span 
-                key={index} 
+              <span
+                key={index}
                 className={symbol.length > 1 ? 'code-element' : 'math-element'}
                 style={{
                   animation: `float ${3 + index * 0.5}s ease-in-out infinite`,
@@ -148,7 +160,7 @@ const HomePage: React.FC = () => {
               >
                 {symbol}
               </span>
-            ))}
+            ))} 
         </div>
 
         <h1 className="main-title">
@@ -167,11 +179,11 @@ const HomePage: React.FC = () => {
           <button className="search-button">
             <FontAwesomeIcon icon={faSearch} />
           </button>
-          
+
           {suggestions.length > 0 && (
             <div className="search-suggestions">
               {suggestions.map((suggestion, index) => (
-                <div 
+                <div
                   key={index}
                   className="suggestion-item"
                   onClick={() => {
@@ -196,7 +208,6 @@ const HomePage: React.FC = () => {
         </div>
       </div>
 
-      {/* Course Sections */}
       <div className="courses-container">
         <CourseSection
           title="HTML"
@@ -205,13 +216,13 @@ const HomePage: React.FC = () => {
           theme="light"
           code={`<!DOCTYPE html>
 <html>
-<head>
+  <head>
     <title>HTML Tutorial</title>
-</head>
-<body>
+  </head>
+  <body>
     <h1>This is a heading</h1>
     <p>This is a paragraph.</p>
-</body>
+  </body>
 </html>`}
         />
 
@@ -221,9 +232,9 @@ const HomePage: React.FC = () => {
           language="javascript"
           theme="dark"
           code={`function myFunction() {
-    let x = document.getElementById("demo");
-    x.style.fontSize = "25px";
-    x.style.color = "red";
+  let x = document.getElementById("demo");
+  x.style.fontSize = "25px";
+  x.style.color = "red";
 }`}
         />
 
@@ -233,11 +244,11 @@ const HomePage: React.FC = () => {
           language="python"
           theme="light"
           code={`def calculate_sum(numbers):
-    total = 0
-    for num in numbers:
-        if num > 0:
-            total += num
-    return total
+  total = 0
+  for num in numbers:
+    if num > 0:
+      total += num
+  return total
 
 numbers = [1, -2, 3, 4, -5]
 result = calculate_sum(numbers)
@@ -249,7 +260,7 @@ print(f"Sum of positive numbers: {result}")`}
       <section className="features">
         <h2>Why Choose Pigram?</h2>
         <div className="features-grid">
-          {[
+          {[ 
             {
               icon: faGraduationCap,
               title: 'Expert-Led Content',
@@ -284,7 +295,7 @@ print(f"Sum of positive numbers: {result}")`}
           setShowSignupModal(true);
         }} />
       )}
-      
+
       {showSignupModal && (
         <SignupModal onClose={() => setShowSignupModal(false)} onSwitch={() => {
           setShowSignupModal(false);
