@@ -105,15 +105,9 @@ const HomePage: React.FC = () => {
   }, [darkMode]);
 
   const handleLogout = () => {
-    // Add your logout logic here
-    // For example:
-    // - Clear local storage/session storage
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    // - Reset any user-related state
     setIsLoggedIn(false);
-    // - Show a success message
-    toast.success('Logged out successfully');
+    setShowLoginModal(false);
+    setShowSignupModal(false);
   };
 
   // Add this effect to check login status on component mount
@@ -290,17 +284,23 @@ print(f"Sum of positive numbers: {result}")`}
 
       {/* Modals */}
       {showLoginModal && (
-        <LoginModal onClose={() => setShowLoginModal(false)} onSwitch={() => {
-          setShowLoginModal(false);
-          setShowSignupModal(true);
-        }} />
+        <LoginModal 
+          onClose={() => setShowLoginModal(false)} 
+          onSwitch={() => {
+            setShowLoginModal(false);
+            setShowSignupModal(true);
+          }} 
+        />
       )}
 
       {showSignupModal && (
-        <SignupModal onClose={() => setShowSignupModal(false)} onSwitch={() => {
-          setShowSignupModal(false);
-          setShowLoginModal(true);
-        }} />
+        <SignupModal 
+          onClose={() => setShowSignupModal(false)} 
+          onSwitch={() => {
+            setShowSignupModal(false);
+            setShowLoginModal(true);
+          }} 
+        />
       )}
 
       <ToastContainer />
