@@ -1,40 +1,64 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
+interface User {
+  firstName: string;
+  lastName: string;
+  email: string;
+}
+
 interface AuthContextType {
-  login: (email: string, password: string) => Promise<void>;
-  signInWithGoogle: () => Promise<void>;
-  signInWithFacebook: () => Promise<void>;
-  // Add other auth-related methods as needed
+  user: User | null;
+  setUser: (user: User | null) => void;
+  isLoggedIn: boolean;
+  login: (userData: User) => void;
+  logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const login = async (email: string, password: string) => {
-    // Implement your login logic here
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [user, setUser] = useState<User | null>(() => {
+    const savedUser = localStorage.getItem('user');
+    return savedUser ? JSON.parse(savedUser) : null;
+  });
+
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(() => {
+    return !!localStorage.getItem('user');
+  });
+
+  useEffect(() => {
+    if (user) {
+      localStorage.setItem('user', JSON.stringify(user));
+      setIsLoggedIn(true);
+    } else {
+      localStorage.removeItem('user');
+      setIsLoggedIn(false);
+    }
+  }, [user]);
+
+  const login = (userData: User) => {
+    setUser(userData);
+    setIsLoggedIn(true);
+    localStorage.setItem('user', JSON.stringify(userData));
   };
 
-  const signInWithGoogle = async () => {
-    // Implement Google sign-in logic
+  const logout = () => {
+    setUser(null);
+    setIsLoggedIn(false);
+    localStorage.removeItem('user');
   };
 
-  const signInWithFacebook = async () => {
-    // Implement Facebook sign-in logic
-  };
+  return (
+    <AuthContext.Provider value={{ user, setUser, isLoggedIn, login, logout }}>
+      {children}
+    </AuthContext.Provider>
+  );
+};
 
-  const value = {
-    login,
-    signInWithGoogle,
-    signInWithFacebook,
-  };
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-}
-
-export function useAuth() {
+export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
-} 
+}; 

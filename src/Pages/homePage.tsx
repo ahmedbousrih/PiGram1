@@ -11,6 +11,12 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Navbar from '../components/navbar';
 import Footer from '../components/footer';
+import { useAuth } from '../context/AuthContext';
+
+interface LoginModalProps {
+  onClose: () => void;
+  onSwitch: () => void;
+}
 
 const HomePage: React.FC = () => {
   const [showLoginModal, setShowLoginModal] = useState(false);
@@ -104,12 +110,6 @@ const HomePage: React.FC = () => {
     document.body.classList.toggle('dark-mode', darkMode);
   }, [darkMode]);
 
-  const handleLogout = () => {
-    setIsLoggedIn(false);
-    setShowLoginModal(false);
-    setShowSignupModal(false);
-  };
-
   // Add this effect to check login status on component mount
   useEffect(() => {
     // Check if user is logged in
@@ -119,6 +119,53 @@ const HomePage: React.FC = () => {
       setIsLoggedIn(true);
     }
   }, []);
+
+  const LoginModal: React.FC<LoginModalProps> = ({ onClose, onSwitch }) => {
+    return (
+      <div className="auth-modal">
+        <div className="auth-container">
+          <button className="close-btn" onClick={onClose}>×</button>
+          <h2 className="auth-title">Log in to continue your learning journey</h2>
+          <div className="auth-form">
+            <input type="email" placeholder="Email" />
+            <input type="password" placeholder="Password" />
+            <button className="submit-btn">Continue with email</button>
+          </div>
+          <div className="divider">Other log in options</div>
+          <div className="social-buttons">
+            <button className="social-btn google">
+              <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cpath fill='%23FFC107' d='M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 12.955 4 4 12.955 4 24s8.955 20 20 20 20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z'/%3E%3C/svg%3E" alt="Google" />
+              Continue with Google
+            </button>
+            <button className="social-btn facebook">
+              <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cpath fill='white' d='M25.638 48H14V24h-4v-8.073h4v-4.745C14 4.83 16.415 0 24.796 0h6.976v8.073h-4.36c-3.264 0-3.475 1.222-3.475 3.5V15.927h7.926L30.996 24h-5.358v24z'/%3E%3C/svg%3E" alt="Facebook" />
+              Facebook
+            </button>
+            <button className="social-btn apple">
+              <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 384 512'%3E%3Cpath fill='white' d='M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z'/%3E%3C/svg%3E" alt="Apple" />
+              Continue with Apple
+            </button>
+          </div>
+          <div className="auth-footer">
+            <span>Don't have an account? <a href="#" onClick={onSwitch}>Sign up</a></span>
+            <a href="#" className="org-link">Log in with your organization</a>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const handleSignup = async (userData: any) => {
+    try {
+      // Your signup logic here
+      console.log('Signing up user:', userData);
+      setIsLoggedIn(true);
+      setShowSignupModal(false);
+      toast.success('Signed up successfully!');
+    } catch (error: any) {
+      toast.error('Error signing up: ' + error.message);
+    }
+  };
 
   return (
     <div className={`home-page ${darkMode ? 'dark-mode' : ''}`}>
@@ -130,8 +177,19 @@ const HomePage: React.FC = () => {
         isScrolled={isScrolled}
         scrollDirection={scrollDirection}
         isLoggedIn={isLoggedIn}
-        onLogout={handleLogout}
+        onLogout={() => {
+          setIsLoggedIn(false);
+          setShowLoginModal(false);
+          setShowSignupModal(false);
+        }}
       />
+
+      {!isLoggedIn && (
+        <div className="auth-buttons">
+          <button onClick={() => setShowLoginModal(true)}>Login</button>
+          <button onClick={() => setShowSignupModal(true)}>Sign Up</button>
+        </div>
+      )}
 
       {/* Hero Section */}
       <div className="hero-section">
@@ -282,7 +340,6 @@ print(f"Sum of positive numbers: {result}")`}
 
       <Footer />
 
-      {/* Modals */}
       {showLoginModal && (
         <LoginModal 
           onClose={() => setShowLoginModal(false)} 
@@ -300,6 +357,7 @@ print(f"Sum of positive numbers: {result}")`}
             setShowSignupModal(false);
             setShowLoginModal(true);
           }} 
+          onSignup={handleSignup}
         />
       )}
 

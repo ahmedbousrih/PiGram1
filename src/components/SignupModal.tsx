@@ -3,28 +3,31 @@ import { toast } from 'react-toastify';
 import { createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { auth } from '../config/firebase';
 import styled from 'styled-components';
+import ProfileSettings from '../Pages/ProfileSettings';
+import { useAuth } from '../context/AuthContext';
 
 interface SignupModalProps {
   onClose: () => void;
   onSwitch: () => void;
+  onSignup: (userData: any) => void;
 }
 
 const ModalOverlay = styled.div`
   position: fixed;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1100;
+  z-index: 1000;
 `;
 
-const ModalContainer = styled.div`
+const ModalContent = styled.div`
   background: white;
-  padding: 2rem;
+  padding: 32px;
   border-radius: 8px;
   width: 100%;
   max-width: 400px;
@@ -33,160 +36,288 @@ const ModalContainer = styled.div`
 
 const CloseButton = styled.button`
   position: absolute;
-  top: 10px;
-  right: 10px;
+  top: 16px;
+  right: 16px;
   background: none;
   border: none;
   font-size: 24px;
   cursor: pointer;
-`;
-
-const Title = styled.h2`
-  margin-bottom: 1.5rem;
-  text-align: center;
-`;
-
-const Form = styled.form`
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-
-  input {
-    padding: 0.75rem;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-  }
-`;
-
-const SubmitButton = styled.button`
-  padding: 0.75rem;
-  background: #6c63ff;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-
-  &:disabled {
-    background: #ccc;
-  }
-`;
-
-const Divider = styled.div`
-  margin: 1rem 0;
-  text-align: center;
   color: #666;
 `;
 
+const Title = styled.h2`
+  text-align: center;
+  margin-bottom: 24px;
+  color: #1c1d1f;
+`;
+
+const SocialButtons = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 24px;
+`;
+
 const SocialButton = styled.button`
-  padding: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 12px;
   border: 1px solid #ddd;
   border-radius: 4px;
   background: white;
   cursor: pointer;
   width: 100%;
-`;
+  font-size: 15px;
+  transition: background 0.2s;
 
-const Footer = styled.div`
-  margin-top: 1rem;
-  text-align: center;
+  &:hover {
+    background: #f7f9fa;
+  }
 
-  button {
-    background: none;
-    border: none;
-    color: #6c63ff;
-    cursor: pointer;
+  img {
+    width: 20px;
+    height: 20px;
   }
 `;
 
-const SignupModal: React.FC<SignupModalProps> = ({ onClose, onSwitch }) => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [loading, setLoading] = useState(false);
+const Divider = styled.div`
+  text-align: center;
+  margin: 24px 0;
+  position: relative;
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!email || !password || !confirmPassword) {
-      toast.error('Please fill in all fields');
-      return;
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    width: 45%;
+    height: 1px;
+    background: #ddd;
+  }
+
+  &::before { left: 0; }
+  &::after { right: 0; }
+`;
+
+const Form = styled.form`
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+`;
+
+const Input = styled.input`
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 15px;
+
+  &:focus {
+    outline: none;
+    border-color: #6C63FF;
+  }
+`;
+
+const SignUpButton = styled.button`
+  background: #6C63FF;
+  color: white;
+  padding: 12px;
+  border: none;
+  border-radius: 4px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background 0.2s;
+
+  &:hover {
+    background: #5b54d6;
+  }
+`;
+
+const Footer = styled.div`
+  text-align: center;
+  margin-top: 24px;
+  font-size: 14px;
+  color: #666;
+
+  a {
+    color: #6C63FF;
+    text-decoration: none;
+    cursor: pointer;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+`;
+
+const ErrorMessage = styled.div`
+  color: #d63031;
+  font-size: 14px;
+  margin-top: -8px;
+`;
+
+const SignupModal: React.FC<SignupModalProps> = ({ onClose, onSwitch, onSignup }) => {
+  const { login } = useAuth();
+
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    password: '',
+    confirmPassword: ''
+  });
+
+  const [errors, setErrors] = useState({
+    password: '',
+    confirmPassword: ''
+  });
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+
+    // Clear errors when typing
+    if (name === 'password' || name === 'confirmPassword') {
+      setErrors(prev => ({
+        ...prev,
+        [name]: ''
+      }));
     }
 
-    if (password !== confirmPassword) {
-      toast.error('Passwords do not match');
-      return;
-    }
-
-    try {
-      setLoading(true);
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      // Store the token
-      const token = await userCredential.user.getIdToken();
-      localStorage.setItem('token', token);
-      toast.success('Account created successfully!');
-      onClose();
-      window.location.reload(); // Refresh to update login state
-    } catch (error: any) {
-      toast.error(error.message);
-    } finally {
-      setLoading(false);
+    // Validate password match when either password field changes
+    if (name === 'password' || name === 'confirmPassword') {
+      if (name === 'password' && value !== formData.confirmPassword) {
+        setErrors(prev => ({
+          ...prev,
+          confirmPassword: 'Passwords do not match'
+        }));
+      } else if (name === 'confirmPassword' && value !== formData.password) {
+        setErrors(prev => ({
+          ...prev,
+          confirmPassword: 'Passwords do not match'
+        }));
+      } else {
+        setErrors(prev => ({
+          ...prev,
+          confirmPassword: ''
+        }));
+      }
     }
   };
 
-  const handleGoogleSignUp = async () => {
-    try {
-      const provider = new GoogleAuthProvider();
-      const result = await signInWithPopup(auth, provider);
-      // Store the token
-      const token = await result.user.getIdToken();
-      localStorage.setItem('token', token);
-      toast.success('Account created successfully with Google!');
-      onClose();
-      window.location.reload(); // Refresh to update login state
-    } catch (error: any) {
-      toast.error(error.message);
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (formData.password !== formData.confirmPassword) {
+      setErrors(prev => ({
+        ...prev,
+        confirmPassword: 'Passwords do not match'
+      }));
+      return;
     }
+
+    // Create user object without confirmPassword
+    const userData = {
+      firstName: formData.firstName,
+      lastName: formData.lastName,
+      email: formData.email,
+      password: formData.password
+    };
+
+    // Call both onSignup and login
+    onSignup(userData);
+    login(userData);
+    onClose();
   };
 
   return (
-    <ModalOverlay>
-      <ModalContainer>
-        <CloseButton onClick={onClose}>&times;</CloseButton>
-        <Title>Create Your Account</Title>
+    <ModalOverlay onClick={onClose}>
+      <ModalContent onClick={e => e.stopPropagation()}>
+        <CloseButton onClick={onClose}>×</CloseButton>
+        <Title>Sign Up</Title>
+
+        <SocialButtons>
+          <SocialButton>
+            <img 
+              src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 488 512'%3E%3Cpath fill='%234285f4' d='M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 123 24.5 166.3 64.9l-67.5 64.9C258.5 52.6 94.3 116.6 94.3 256c0 86.5 69.1 156.6 153.7 156.6 98.2 0 135-70.4 140.8-106.9H248v-85.3h236.1c2.3 12.7 3.9 24.9 3.9 41.4z'/%3E%3C/svg%3E"
+              alt="Google"
+            />
+            Continue with Google
+          </SocialButton>
+          <SocialButton>
+            <img 
+              src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 320 512'%3E%3Cpath fill='%231877f2' d='M279.14 288l14.22-92.66h-88.91v-60.13c0-25.35 12.42-50.06 52.24-50.06h40.42V6.26S260.43 0 225.36 0c-73.22 0-121.08 44.38-121.08 124.72v70.62H22.89V288h81.39v224h100.17V288z'/%3E%3C/svg%3E"
+              alt="Facebook"
+            />
+            Continue with Facebook
+          </SocialButton>
+        </SocialButtons>
+
+        <Divider>OR</Divider>
+
         <Form onSubmit={handleSubmit}>
-          <input
+          <Input
+            type="text"
+            name="firstName"
+            placeholder="First Name"
+            value={formData.firstName}
+            onChange={handleChange}
+            required
+          />
+          <Input
+            type="text"
+            name="lastName"
+            placeholder="Last Name"
+            value={formData.lastName}
+            onChange={handleChange}
+            required
+          />
+          <Input
             type="email"
+            name="email"
             placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            value={formData.email}
+            onChange={handleChange}
+            required
           />
-          <input
+          <Input
             type="password"
+            name="password"
             placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            value={formData.password}
+            onChange={handleChange}
+            required
+            minLength={6}
           />
-          <input
+          {errors.password && <ErrorMessage>{errors.password}</ErrorMessage>}
+          <Input
             type="password"
+            name="confirmPassword"
             placeholder="Confirm Password"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
+            value={formData.confirmPassword}
+            onChange={handleChange}
+            required
+            minLength={6}
           />
-          <SubmitButton type="submit" disabled={loading}>
-            {loading ? 'Creating Account...' : 'Sign Up'}
-          </SubmitButton>
+          {errors.confirmPassword && (
+            <ErrorMessage>{errors.confirmPassword}</ErrorMessage>
+          )}
+          <SignUpButton 
+            type="submit"
+            disabled={!!errors.password || !!errors.confirmPassword}
+          >
+            Sign Up
+          </SignUpButton>
         </Form>
 
-        <Divider>Or sign up with</Divider>
-
-        <SocialButton onClick={handleGoogleSignUp}>
-          Continue with Google
-        </SocialButton>
-
         <Footer>
-          <p>Already have an account? <button onClick={onSwitch}>Log in</button></p>
+          Already have an account? <a onClick={onSwitch}>Log in</a>
         </Footer>
-      </ModalContainer>
+      </ModalContent>
     </ModalOverlay>
   );
 };
