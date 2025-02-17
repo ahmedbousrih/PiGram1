@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSearch, faGraduationCap, faTasks, faChartLine } from '@fortawesome/free-solid-svg-icons';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import LoginModal from '../components/LoginModal';
 import SignupModal from '../components/SignupModal';
 import CourseSection from '../components/CourseSection';
@@ -12,6 +13,8 @@ import 'react-toastify/dist/ReactToastify.css';
 import Navbar from '../components/navbar';
 import Footer from '../components/footer';
 import { useAuth } from '../context/AuthContext';
+import { doc, setDoc, serverTimestamp } from '@firebase/firestore';
+import { db } from '../config/firebase';
 
 interface LoginModalProps {
   onClose: () => void;
@@ -21,14 +24,12 @@ interface LoginModalProps {
 const HomePage: React.FC = () => {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showSignupModal, setShowSignupModal] = useState(false);
-  const [darkMode, setDarkMode] = useState(() => {
-    return window.matchMedia('(prefers-color-scheme: dark)').matches;
-  });
   const [searchValue, setSearchValue] = useState('');
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const { isScrolled, scrollDirection } = useScrollEffect();
   const subtitleRef = useRef<HTMLParagraphElement>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const { logout } = useAuth();
 
   // Sample search suggestions
   const sampleSuggestions = [
@@ -105,11 +106,6 @@ const HomePage: React.FC = () => {
     return () => observer.disconnect();
   }, []);
 
-  // Update body class when dark mode changes
-  useEffect(() => {
-    document.body.classList.toggle('dark-mode', darkMode);
-  }, [darkMode]);
-
   // Add this effect to check login status on component mount
   useEffect(() => {
     // Check if user is logged in
@@ -157,31 +153,42 @@ const HomePage: React.FC = () => {
 
   const handleSignup = async (userData: any) => {
     try {
-      // Your signup logic here
-      console.log('Signing up user:', userData);
+      // You might want to store additional user data in Firestore here
+      const userDoc = doc(db, 'users', userData.uid);
+      await setDoc(userDoc, {
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        email: userData.email,
+        createdAt: serverTimestamp(),
+      });
+
       setIsLoggedIn(true);
       setShowSignupModal(false);
       toast.success('Signed up successfully!');
     } catch (error: any) {
-      toast.error('Error signing up: ' + error.message);
+      toast.error('Error completing signup: ' + error.message);
+      console.error('Error storing user data:', error);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      // The AuthContext will handle clearing the user state
+    } catch (error) {
+      console.error('Error during logout:', error);
     }
   };
 
   return (
-    <div className={`home-page ${darkMode ? 'dark-mode' : ''}`}>
+    <div className="home-page">
       <Navbar
-        darkMode={darkMode}
-        setDarkMode={setDarkMode}
         setShowLoginModal={setShowLoginModal}
         setShowSignupModal={setShowSignupModal}
         isScrolled={isScrolled}
         scrollDirection={scrollDirection}
         isLoggedIn={isLoggedIn}
-        onLogout={() => {
-          setIsLoggedIn(false);
-          setShowLoginModal(false);
-          setShowSignupModal(false);
-        }}
+        onLogout={handleLogout}
       />
 
       {!isLoggedIn && (
@@ -265,7 +272,6 @@ const HomePage: React.FC = () => {
           title="HTML"
           subtitle="The language for building web pages"
           language="html"
-          theme="light"
           code={`<!DOCTYPE html>
 <html>
   <head>
@@ -282,7 +288,6 @@ const HomePage: React.FC = () => {
           title="JavaScript"
           subtitle="The language for programming web pages"
           language="javascript"
-          theme="dark"
           code={`function myFunction() {
   let x = document.getElementById("demo");
   x.style.fontSize = "25px";
@@ -294,7 +299,6 @@ const HomePage: React.FC = () => {
           title="Python"
           subtitle="A popular programming language"
           language="python"
-          theme="light"
           code={`def calculate_sum(numbers):
   total = 0
   for num in numbers:

@@ -7,7 +7,6 @@ interface CourseSectionProps {
   title: string;
   subtitle: string;
   language: string;
-  theme: 'light' | 'dark';
   code: string;
 }
 
@@ -15,11 +14,10 @@ const CourseSection: React.FC<CourseSectionProps> = ({
   title,
   subtitle,
   language,
-  theme,
   code,
 }) => {
   return (
-    <section className={`course-section ${theme}`}>
+    <section className="course-section">
       <div className="course-content">
         <div className="course-info">
           <h1 className="course-title">{title}</h1>
@@ -28,7 +26,7 @@ const CourseSection: React.FC<CourseSectionProps> = ({
             <Link to={`/learn-${language}`} className="cta-button primary">
               Learn {title}
             </Link>
-            <Link to={`/${language}-reference`} className={`cta-button ${theme === 'light' ? 'dark' : 'light'}`}>
+            <Link to={`/${language}-reference`} className="cta-button secondary">
               {title} Reference
             </Link>
           </div>

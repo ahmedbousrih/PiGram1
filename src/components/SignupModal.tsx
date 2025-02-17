@@ -5,6 +5,8 @@ import { auth } from '../config/firebase';
 import styled from 'styled-components';
 import ProfileSettings from '../Pages/ProfileSettings';
 import { useAuth } from '../context/AuthContext';
+import { doc, setDoc } from '@firebase/firestore';
+import { db } from '../config/firebase';
 
 interface SignupModalProps {
   onClose: () => void;
@@ -209,29 +211,85 @@ const SignupModal: React.FC<SignupModalProps> = ({ onClose, onSwitch, onSignup }
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (formData.password !== formData.confirmPassword) {
-      setErrors(prev => ({
-        ...prev,
-        confirmPassword: 'Passwords do not match'
-      }));
-      return;
+    console.log('Signup form submitted:', formData); // Debug log
+
+    try {
+      // Create auth user
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        formData.email,
+        formData.password
+      );
+
+      // Store additional user data in Firestore
+      await setDoc(doc(db, 'users', userCredential.user.uid), {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        createdAt: new Date().toISOString()
+      });
+
+      console.log('User data stored in Firestore:', userCredential.user.uid);
+
+      // Make sure this data matches your User interface
+      const userData = {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email
+      };
+
+      console.log('Calling login with:', userData); // Debug log
+      login(userData);
+
+      toast.success('Account created successfully!');
+      onClose();
+    } catch (error: any) {
+      // Enhanced error handling
+      let errorMessage = 'An error occurred during signup';
+      
+      switch (error.code) {
+        case 'auth/email-already-in-use':
+          errorMessage = 'This email is already registered. Please try logging in instead.';
+          break;
+        case 'auth/weak-password':
+          errorMessage = 'Password should be at least 6 characters';
+          break;
+        case 'auth/invalid-email':
+          errorMessage = 'Please enter a valid email address';
+          break;
+        case 'auth/network-request-failed':
+          errorMessage = 'Network error. Please check your connection';
+          break;
+        default:
+          console.error('Signup error:', error);
+      }
+      
+      toast.error(errorMessage);
     }
+  };
 
-    // Create user object without confirmPassword
-    const userData = {
-      firstName: formData.firstName,
-      lastName: formData.lastName,
-      email: formData.email,
-      password: formData.password
-    };
+  // Add Google Sign-in handler
+  const handleGoogleSignIn = async () => {
+    try {
+      const provider = new GoogleAuthProvider();
+      const result = await signInWithPopup(auth, provider);
+      
+      const userData = {
+        uid: result.user.uid,
+        firstName: result.user.displayName?.split(' ')[0] || '',
+        lastName: result.user.displayName?.split(' ').slice(1).join(' ') || '',
+        email: result.user.email || '',
+      };
 
-    // Call both onSignup and login
-    onSignup(userData);
-    login(userData);
-    onClose();
+      onSignup(userData);
+      toast.success('Signed in with Google successfully!');
+      onClose();
+    } catch (error) {
+      toast.error('Error signing in with Google');
+      console.error('Google sign-in error:', error);
+    }
   };
 
   return (
@@ -241,7 +299,7 @@ const SignupModal: React.FC<SignupModalProps> = ({ onClose, onSwitch, onSignup }
         <Title>Sign Up</Title>
 
         <SocialButtons>
-          <SocialButton>
+          <SocialButton type="button" onClick={handleGoogleSignIn}>
             <img 
               src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 488 512'%3E%3Cpath fill='%234285f4' d='M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 123 24.5 166.3 64.9l-67.5 64.9C258.5 52.6 94.3 116.6 94.3 256c0 86.5 69.1 156.6 153.7 156.6 98.2 0 135-70.4 140.8-106.9H248v-85.3h236.1c2.3 12.7 3.9 24.9 3.9 41.4z'/%3E%3C/svg%3E"
               alt="Google"

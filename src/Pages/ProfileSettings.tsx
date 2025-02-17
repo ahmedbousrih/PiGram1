@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Navbar from '../components/navbar';
 import styled from 'styled-components';
+import { toast } from 'react-toastify';
+import { useAuth } from '../context/AuthContext';
 
 const ProfileContainer = styled.div`
   padding-top: 80px; // To account for fixed navbar
@@ -66,11 +68,29 @@ const SettingsSection = styled.section`
 `;
 
 const ProfileSettings: React.FC = () => {
+  const { user } = useAuth();
+  
+  const handleUpdateProfile = async (data: any) => {
+    try {
+      // Your update logic here
+      toast.success('Profile updated successfully');
+    } catch (error: any) {
+      toast.error('Error updating profile: ' + error.message);
+    }
+  };
+
+  const handleUpdatePreferences = async (data: any) => {
+    try {
+      // Your preferences update logic here
+      toast.success('Preferences saved successfully');
+    } catch (error: any) {
+      toast.error('Error saving preferences: ' + error.message);
+    }
+  };
+
   return (
     <>
       <Navbar 
-        darkMode={false}
-        setDarkMode={() => {}}
         setShowLoginModal={() => {}}
         setShowSignupModal={() => {}}
         isScrolled={false}
@@ -88,19 +108,19 @@ const ProfileSettings: React.FC = () => {
               />
             </ProfileAvatar>
             <ProfileInfo>
-              <ProfileName>John Doe</ProfileName>
-              <ProfileEmail>john.doe@example.com</ProfileEmail>
+              <ProfileName>{user?.firstName} {user?.lastName || 'John Doe'}</ProfileName>
+              <ProfileEmail>{user?.email || 'john.doe@example.com'}</ProfileEmail>
             </ProfileInfo>
           </ProfileHeader>
 
           <SettingsSection>
             <h2>Account Settings</h2>
-            {/* Add your settings forms/controls here */}
+            {/* Add your settings forms with handleUpdateProfile */}
           </SettingsSection>
 
           <SettingsSection>
             <h2>Preferences</h2>
-            {/* Add preferences controls here */}
+            {/* Add preferences controls with handleUpdatePreferences */}
           </SettingsSection>
 
           <SettingsSection>
