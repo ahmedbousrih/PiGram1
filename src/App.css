@@ -36,3 +36,90 @@
     transform: rotate(360deg);
   }
 }
+
+:root {
+  --bg-primary: #ffffff;
+  --text-primary: #333333;
+  --nav-bg: #ffffff;
+  --dropdown-bg: #ffffff;
+  --hover-bg: #f5f7ff;
+  --first-bg: #e0f7fa; /* Light blue for first section */
+  --last-bg: #fce4ec;  /* Light pink for last section */
+}
+
+.dark-mode {
+  --bg-primary: #1a1a1a;
+  --text-primary: #ffffff;
+  --nav-bg: #242424;
+  --dropdown-bg: #2d2d2d;
+  --hover-bg: #363636;
+  --first-bg: #004d40; /* Dark teal for first section */
+  --last-bg: #880e4f;  /* Dark pink for last section */
+}
+
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.features {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.feature-card {
+  background-color: var(--dropdown-bg);
+  color: var(--text-primary);
+  border-radius: 8px;
+  padding: 1rem;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.feature-card:hover {
+  background-color: var(--hover-bg);
+}
+
+.nav-bg {
+  background-color: var(--nav-bg);
+}
+
+.dropdown-bg {
+  background-color: var(--dropdown-bg);
+}
+
+.hover-bg {
+  background-color: var(--hover-bg);
+}
+
+.code-container {
+  background-color: var(--dropdown-bg);
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 1rem;
+}
+
+.code-header {
+  background-color: #333;
+  color: #fff;
+  padding: 0.5rem 1rem;
+  font-weight: bold;
+}
+
+.try-button {
+  background-color: #28a745;
+  color: white;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 0 0 8px 8px;
+  cursor: pointer;
+  width: 100%;
+  font-weight: bold;
+  transition: background-color 0.3s;
+}
+
+.try-button:hover {
+  background-color: #218838;
+}

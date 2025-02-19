@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { toast } from 'react-toastify';
-import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, setPersistence, browserLocalPersistence } from 'firebase/auth';
-import { auth, db } from '../config/firebase';
+import React, { useState } from 'react';
 import styled from 'styled-components';
-import { FaGoogle, FaFacebook, FaEye, FaEyeSlash } from 'react-icons/fa';
+import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, FacebookAuthProvider } from 'firebase/auth';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { auth, db } from '../config/firebase';
 import { useAuth } from '../context/AuthContext';
-import { getDoc, doc, setDoc } from 'firebase/firestore';
+import { toast } from 'react-toastify';
+import { FaGoogle, FaFacebook, FaApple } from 'react-icons/fa';
 
 interface LoginModalProps {
   onClose: () => void;
@@ -23,434 +23,302 @@ const ModalOverlay = styled.div`
   justify-content: center;
   align-items: center;
   z-index: 1000;
-  backdrop-filter: blur(5px);
 `;
 
 const ModalContent = styled.div`
   background: white;
+  padding: 2.5rem;
   border-radius: 12px;
-  padding: 40px;
   width: 100%;
-  max-width: 440px;
-  position: relative;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
-`;
-
-const CloseButton = styled.button`
-  position: absolute;
-  top: 16px;
-  right: 16px;
-  background: none;
-  border: none;
-  font-size: 24px;
-  cursor: pointer;
-  color: #666;
-  padding: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s;
-
-  &:hover {
-    color: #333;
-    transform: scale(1.1);
-  }
+  max-width: 400px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
 `;
 
 const Title = styled.h2`
   text-align: center;
-  margin-bottom: 32px;
-  color: #1c1d1f;
-  font-size: 28px;
-  font-weight: 600;
+  margin-bottom: 1.5rem;
+  font-size: 24px;
+  color: #333;
 `;
 
-const Form = styled.form`
+const StyledForm = styled.form`
   display: flex;
   flex-direction: column;
-  gap: 20px;
-`;
-
-const InputGroup = styled.div`
-  position: relative;
+  gap: 1rem;
 `;
 
 const Input = styled.input`
-  width: 100%;
-  padding: 12px 16px;
-  border: 2px solid #e6e6e6;
+  padding: 12px;
+  border: 1px solid #ddd;
   border-radius: 8px;
-  font-size: 16px;
-  transition: all 0.2s;
-  outline: none;
-
+  font-size: 1rem;
+  transition: border-color 0.2s;
+  
   &:focus {
-    border-color: #6C63FF;
-    box-shadow: 0 0 0 4px rgba(108, 99, 255, 0.1);
-  }
-
-  &::placeholder {
-    color: #999;
+    border-color: #6c63ff;
+    outline: none;
   }
 `;
 
-const PasswordToggle = styled.button`
-  position: absolute;
-  right: 16px;
-  top: 50%;
-  transform: translateY(-50%);
-  background: none;
+const Button = styled.button`
+  padding: 12px;
   border: none;
-  color: #666;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
   cursor: pointer;
-  padding: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  &:hover {
-    color: #333;
-  }
-`;
-
-const SocialButtons = styled.div`
-  display: flex;
-  gap: 16px;
-  margin: 24px 0;
-`;
-
-const SocialButton = styled.button<{ $provider: 'google' | 'facebook' }>`
-  flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 12px;
-  border: 2px solid #e6e6e6;
-  border-radius: 8px;
-  background: white;
-  color: ${props => props.$provider === 'google' ? '#DB4437' : '#4267B2'};
-  font-size: 16px;
-  font-weight: 500;
-  cursor: pointer;
   transition: all 0.2s;
-
-  &:hover {
-    background: ${props => props.$provider === 'google' ? 'rgba(219, 68, 55, 0.05)' : 'rgba(66, 103, 178, 0.05)'};
-    border-color: ${props => props.$provider === 'google' ? '#DB4437' : '#4267B2'};
-  }
 `;
 
-const LoginButton = styled.button`
-  width: 100%;
-  padding: 12px;
+const SubmitButton = styled(Button)`
   background: #6c63ff;
   color: white;
-  border: none;
-  border-radius: 4px;
-  font-size: 16px;
-  font-weight: 500;
-  margin-top: 20px;
-  cursor: pointer;
-  transition: background 0.2s;
-
+  
   &:hover {
     background: #5b54d6;
   }
-
-  &:active {
-    background: #4a43c5;
+  
+  &:disabled {
+    background: #9995ff;
+    cursor: not-allowed;
   }
 `;
 
 const Divider = styled.div`
   display: flex;
   align-items: center;
-  gap: 16px;
-  margin: 24px 0;
+  text-align: center;
+  margin: 1.5rem 0;
   color: #666;
-
-  &::before,
-  &::after {
+  
+  &::before, &::after {
     content: '';
     flex: 1;
-    height: 1px;
-    background: #e6e6e6;
+    border-bottom: 1px solid #ddd;
+  }
+  
+  span {
+    padding: 0 10px;
+    font-size: 14px;
+  }
+`;
+
+const SocialButton = styled(Button)<{ $provider: string }>`
+  background: ${props => 
+    props.$provider === 'google' ? 'white' : 
+    props.$provider === 'facebook' ? '#1877f2' : 
+    props.$provider === 'apple' ? '#000' : 'white'};
+  color: ${props => props.$provider === 'google' ? '#333' : 'white'};
+  border: ${props => props.$provider === 'google' ? '1px solid #ddd' : 'none'};
+  
+  &:hover {
+    background: ${props => 
+      props.$provider === 'google' ? '#f5f5f5' : 
+      props.$provider === 'facebook' ? '#1664d9' : 
+      props.$provider === 'apple' ? '#1a1a1a' : '#f5f5f5'};
   }
 `;
 
 const Footer = styled.div`
   text-align: center;
-  margin-top: 24px;
+  margin-top: 1.5rem;
+  font-size: 14px;
   color: #666;
-  font-size: 15px;
-
+  
   a {
-    color: #6C63FF;
+    color: #6c63ff;
     text-decoration: none;
-    font-weight: 500;
     cursor: pointer;
-
+    
     &:hover {
       text-decoration: underline;
     }
   }
 `;
 
-const ForgotPassword = styled.a`
-  color: #6C63FF;
-  text-decoration: none;
-  font-size: 14px;
-  font-weight: 500;
-  text-align: right;
-  cursor: pointer;
-  margin-top: -12px;
-
-  &:hover {
-    text-decoration: underline;
-  }
-`;
-
 const LoginModal: React.FC<LoginModalProps> = ({ onClose, onSwitch }) => {
   const { login } = useAuth();
-  const [showPassword, setShowPassword] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [formData, setFormData] = useState({
-    email: '',
-    password: ''
-  });
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Debug persistence setting
-  useEffect(() => {
-    console.log('Setting up Firebase persistence...');
-    setPersistence(auth, browserLocalPersistence)
-      .then(() => console.log("✅ Persistence set successfully"))
-      .catch((error) => console.error("❌ Persistence error:", error));
-  }, []);
-
-  // Debug auth state changes
-  useEffect(() => {
-    console.log('Setting up auth state listener...');
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      console.log("🔄 Auth state changed:", user ? "User logged in" : "No user");
-      if (user) {
-        console.log("📝 User details:", {
-          uid: user.uid,
-          email: user.email,
-          emailVerified: user.emailVerified
-        });
-      }
-    });
-    return () => {
-      console.log('Cleaning up auth state listener...');
-      unsubscribe();
-    };
-  }, []);
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    console.log(`📝 Input changed: ${name}`);
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('🚀 Login submission started');
+    if (isLoading) return;
     
-    // Validate inputs
-    if (!formData.email || !formData.password) {
-      console.error('❌ Missing email or password');
-      toast.error('Please fill in all fields');
-      return;
-    }
-
-    console.log('✅ Form validation passed');
-    setIsSubmitting(true);
-    const loadingToast = toast.loading('Attempting to log in...');
+    const toastId = toast.loading('Logging in...', { toastId: 'login' });
+    setIsLoading(true);
 
     try {
-      console.log('🔑 Attempting Firebase authentication...');
-      const userCredential = await signInWithEmailAndPassword(
-        auth,
-        formData.email,
-        formData.password
-      );
-
-      console.log('✅ Firebase auth successful:', userCredential.user.uid);
-
-      // Get user data from Firestore
-      console.log('📚 Fetching user data from Firestore...');
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const userDoc = await getDoc(doc(db, 'users', userCredential.user.uid));
       const userData = userDoc.data();
-      
-      console.log('📄 Firestore user data:', userData);
 
       if (userData) {
-        console.log('🔄 Updating auth context...');
         login({
           firstName: userData.firstName,
           lastName: userData.lastName,
           email: userData.email,
         });
 
-        toast.update(loadingToast, {
+        toast.update(toastId, {
           render: 'Logged in successfully!',
           type: 'success',
           isLoading: false,
-          autoClose: 3000
+          autoClose: 2000,
         });
 
-        console.log('✅ Login process completed');
-        onClose();
-      } else {
-        console.error('❌ No user data found in Firestore');
-        toast.update(loadingToast, {
-          render: 'User data not found',
-          type: 'error',
-          isLoading: false,
-          autoClose: 3000
-        });
+        setTimeout(onClose, 1000);
       }
     } catch (error: any) {
-      console.error('❌ Login error:', error);
-      
-      // Enhanced error handling with specific messages
-      let errorMessage = 'Failed to login';
-      switch (error.code) {
-        case 'auth/user-not-found':
-          errorMessage = 'No account found with this email';
-          break;
-        case 'auth/wrong-password':
-          errorMessage = 'Incorrect password';
-          break;
-        case 'auth/invalid-email':
-          errorMessage = 'Invalid email format';
-          break;
-        case 'auth/too-many-requests':
-          errorMessage = 'Too many failed attempts. Please try again later';
-          break;
-        default:
-          errorMessage = error.message;
-      }
-
-      toast.update(loadingToast, {
-        render: errorMessage,
+      toast.update(toastId, {
+        render: error.message,
         type: 'error',
         isLoading: false,
-        autoClose: 3000
+        autoClose: 3000,
       });
     } finally {
-      console.log('🏁 Login attempt finished');
-      setIsSubmitting(false);
+      setIsLoading(false);
     }
   };
 
-  const handleGoogleSignIn = async () => {
-    console.log('🔄 Starting Google Sign In...');
+  const handleSocialLogin = async (provider: 'google' | 'facebook' | 'apple') => {
+    const toastId = toast.loading('Connecting...', { toastId: `login-${provider}` });
+    
     try {
-      const provider = new GoogleAuthProvider();
-      const result = await signInWithPopup(auth, provider);
-      console.log('✅ Google Sign In successful:', result.user.uid);
+      const authProvider = 
+        provider === 'google' ? new GoogleAuthProvider() :
+        provider === 'facebook' ? new FacebookAuthProvider() :
+        null;
 
-      // Get or create user data in Firestore
-      const userDoc = await getDoc(doc(db, 'users', result.user.uid));
-      let userData;
-
-      if (userDoc.exists()) {
-        userData = userDoc.data();
-        console.log('📄 Existing user data found:', userData);
-      } else {
-        // Create new user document
-        userData = {
-          firstName: result.user.displayName?.split(' ')[0] || '',
-          lastName: result.user.displayName?.split(' ').slice(1).join(' ') || '',
-          email: result.user.email,
-          createdAt: new Date().toISOString()
-        };
-        await setDoc(doc(db, 'users', result.user.uid), userData);
-        console.log('📝 New user data created:', userData);
+      if (!authProvider) {
+        toast.update(toastId, {
+          render: 'Service not available',
+          type: 'error',
+          isLoading: false,
+          autoClose: 3000,
+        });
+        return;
       }
 
-      login({
-        firstName: userData.firstName,
-        lastName: userData.lastName,
-        email: userData.email,
-      });
-      toast.success('Signed in with Google successfully!');
-      onClose();
+      const result = await signInWithPopup(auth, authProvider);
+      const user = result.user;
+
+      // Get user data from Firestore
+      const userDoc = await getDoc(doc(db, 'users', user.uid));
+      const userData = userDoc.data();
+
+      if (userData) {
+        login({
+          firstName: userData.firstName,
+          lastName: userData.lastName,
+          email: userData.email,
+        });
+
+        toast.update(toastId, {
+          render: 'Logged in successfully!',
+          type: 'success',
+          isLoading: false,
+          autoClose: 2000,
+        });
+        
+        setTimeout(onClose, 1000);
+      } else {
+        // If user doesn't exist in Firestore, create a new document
+        const newUserData = {
+          firstName: user.displayName?.split(' ')[0] || '',
+          lastName: user.displayName?.split(' ').slice(1).join(' ') || '',
+          email: user.email || '',
+          createdAt: new Date().toISOString(),
+          provider: provider,
+          photoURL: user.photoURL || '',
+        };
+
+        await setDoc(doc(db, 'users', user.uid), newUserData);
+        
+        login({
+          firstName: newUserData.firstName,
+          lastName: newUserData.lastName,
+          email: newUserData.email,
+        });
+
+        toast.update(toastId, {
+          render: 'Account created and logged in successfully!',
+          type: 'success',
+          isLoading: false,
+          autoClose: 2000,
+        });
+        
+        setTimeout(onClose, 1000);
+      }
     } catch (error: any) {
-      console.error('❌ Google Sign In error:', error);
-      toast.error('Error signing in with Google');
+      toast.update(toastId, {
+        render: error.message,
+        type: 'error',
+        isLoading: false,
+        autoClose: 3000,
+      });
     }
   };
 
   return (
-    <ModalOverlay onClick={(e) => {
-      console.log('Modal overlay clicked');
-      if (e.target === e.currentTarget) onClose();
-    }}>
+    <ModalOverlay onClick={(e) => e.target === e.currentTarget && onClose()}>
       <ModalContent onClick={e => e.stopPropagation()}>
-        <CloseButton onClick={onClose}>×</CloseButton>
         <Title>Welcome Back</Title>
-
-        <Form onSubmit={handleSubmit}>
-          <InputGroup>
-            <Input
-              type="email"
-              name="email"
-              placeholder="Email"
-              value={formData.email}
-              onChange={handleChange}
-              required
-            />
-          </InputGroup>
+        
+        <StyledForm onSubmit={handleEmailLogin}>
+          <Input
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
           
-          <InputGroup>
-            <Input
-              type={showPassword ? "text" : "password"}
-              name="password"
-              placeholder="Password"
-              value={formData.password}
-              onChange={handleChange}
-              required
-            />
-            <PasswordToggle
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-            >
-              {showPassword ? <FaEyeSlash /> : <FaEye />}
-            </PasswordToggle>
-          </InputGroup>
+          <Input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+          
+          <SubmitButton type="submit" disabled={isLoading}>
+            {isLoading ? 'Logging in...' : 'Continue with email'}
+          </SubmitButton>
+        </StyledForm>
 
-          <LoginButton 
-            type="submit"
-            disabled={isSubmitting}
-          >
-            Continue with email
-          </LoginButton>
-        </Form>
+        <Divider><span>or continue with</span></Divider>
 
-        <Divider>or</Divider>
-
-        <SocialButtons>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
           <SocialButton 
             type="button"
-            $provider="google" 
-            onClick={handleGoogleSignIn}
+            $provider="google"
+            onClick={() => handleSocialLogin('google')}
           >
             <FaGoogle /> Continue with Google
           </SocialButton>
+          
           <SocialButton 
             type="button"
             $provider="facebook"
-            onClick={() => toast.info('Facebook login coming soon')}
+            onClick={() => handleSocialLogin('facebook')}
           >
             <FaFacebook /> Continue with Facebook
           </SocialButton>
-        </SocialButtons>
+          
+          <SocialButton 
+            type="button"
+            $provider="apple"
+            onClick={() => handleSocialLogin('apple')}
+          >
+            <FaApple /> Continue with Apple
+          </SocialButton>
+        </div>
 
         <Footer>
           Don't have an account? <a onClick={onSwitch}>Sign up</a>

@@ -1,10 +1,9 @@
 // src/config/firebase.ts
 import { initializeApp } from '@firebase/app';
 import { getAnalytics } from 'firebase/analytics';
-import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import { getFirestore, initializeFirestore, enableMultiTabIndexedDbPersistence } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
-import { enableIndexedDbPersistence } from '@firebase/firestore';
 
 const firebaseConfig = {
   apiKey: "AIzaSyBhprwomASuxSkNgUaSx27PxkDa9BoOKN8",
@@ -24,32 +23,42 @@ const analytics = typeof window !== 'undefined' ? getAnalytics(app) : null;
 // Initialize Auth
 export const auth = getAuth(app);
 
-// Add this after initializing auth
-auth.onAuthStateChanged((user) => {
+// Add auth state observer
+onAuthStateChanged(auth, (user) => {
   if (user) {
-    console.log('User is signed in');
+    console.log('User is signed in:', {
+      email: user.email,
+      uid: user.uid,
+      displayName: user.displayName,
+      lastLoginAt: new Date().toLocaleString()
+    });
   } else {
     console.log('User is signed out');
   }
-}, (error) => {
-  console.error('Auth state change error:', error);
 });
 
-// Initialize Firestore with persistence
-export const db = getFirestore(app);
+// Initialize Firestore with settings
+export const db = initializeFirestore(app, {
+  cacheSizeBytes: 50000000,  // 50 MB
+  experimentalForceLongPolling: true,
+});
+
+// Enable multi-tab persistence
+enableMultiTabIndexedDbPersistence(db)
+  .then(() => {
+    console.log('Persistence enabled successfully');
+  })
+  .catch((err) => {
+    if (err.code === 'failed-precondition') {
+      // Multiple tabs open, persistence can only be enabled in one tab at a time
+      console.warn('Multiple tabs open, persistence enabled in another tab');
+    } else if (err.code === 'unimplemented') {
+      // The current browser doesn't support persistence
+      console.warn('Browser does not support persistence');
+    }
+  });
 
 export const storage = getStorage(app);
-
-// Enable offline persistence
-enableIndexedDbPersistence(db).catch((err) => {
-    if (err.code == 'failed-precondition') {
-        // Multiple tabs open, persistence can only be enabled in one tab at a time
-        console.log('Persistence failed');
-    } else if (err.code == 'unimplemented') {
-        // The current browser doesn't support persistence
-        console.log('Persistence not supported');
-    }
-});
 
 export default app;
 

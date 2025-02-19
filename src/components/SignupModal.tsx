@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
-import { toast } from 'react-toastify';
-import { createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
-import { auth } from '../config/firebase';
 import styled from 'styled-components';
-import ProfileSettings from '../Pages/ProfileSettings';
+import { createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, FacebookAuthProvider } from 'firebase/auth';
+import { doc, setDoc } from 'firebase/firestore';
+import { auth, db } from '../config/firebase';
 import { useAuth } from '../context/AuthContext';
-import { doc, setDoc } from '@firebase/firestore';
-import { db } from '../config/firebase';
+import { toast } from 'react-toastify';
+import { FaGoogle, FaFacebook, FaApple } from 'react-icons/fa';
 
 interface SignupModalProps {
   onClose: () => void;
@@ -20,7 +19,7 @@ const ModalOverlay = styled.div`
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.6);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -29,139 +28,132 @@ const ModalOverlay = styled.div`
 
 const ModalContent = styled.div`
   background: white;
-  padding: 32px;
-  border-radius: 8px;
+  padding: 2.5rem;
+  border-radius: 12px;
   width: 100%;
   max-width: 400px;
-  position: relative;
-`;
-
-const CloseButton = styled.button`
-  position: absolute;
-  top: 16px;
-  right: 16px;
-  background: none;
-  border: none;
-  font-size: 24px;
-  cursor: pointer;
-  color: #666;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
 `;
 
 const Title = styled.h2`
   text-align: center;
-  margin-bottom: 24px;
-  color: #1c1d1f;
+  margin-bottom: 1.5rem;
+  font-size: 24px;
+  color: #333;
 `;
 
-const SocialButtons = styled.div`
+const StyledForm = styled.form`
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  margin-bottom: 24px;
+  gap: 1rem;
 `;
 
-const SocialButton = styled.button`
+const InputGroup = styled.div`
+  display: flex;
+  gap: 1rem;
+  width: 100%;
+
+  input {
+    width: 50%;  // Make each input take up equal space
+  }
+`;
+
+const Input = styled.input`
+  width: 100%;  // Make inputs fill their container
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: border-color 0.2s;
+  
+  &:focus {
+    border-color: #6c63ff;
+    outline: none;
+  }
+`;
+
+const Button = styled.button`
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
-  padding: 12px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  background: white;
-  cursor: pointer;
-  width: 100%;
-  font-size: 15px;
-  transition: background 0.2s;
+  gap: 8px;
+  transition: all 0.2s;
+`;
 
+const SubmitButton = styled(Button)`
+  background: #6c63ff;
+  color: white;
+  
   &:hover {
-    background: #f7f9fa;
+    background: #5b54d6;
   }
-
-  img {
-    width: 20px;
-    height: 20px;
+  
+  &:disabled {
+    background: #9995ff;
+    cursor: not-allowed;
   }
 `;
 
 const Divider = styled.div`
-  text-align: center;
-  margin: 24px 0;
-  position: relative;
-
-  &::before,
-  &::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    width: 45%;
-    height: 1px;
-    background: #ddd;
-  }
-
-  &::before { left: 0; }
-  &::after { right: 0; }
-`;
-
-const Form = styled.form`
   display: flex;
-  flex-direction: column;
-  gap: 16px;
-`;
-
-const Input = styled.input`
-  padding: 12px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 15px;
-
-  &:focus {
-    outline: none;
-    border-color: #6C63FF;
+  align-items: center;
+  text-align: center;
+  margin: 1.5rem 0;
+  color: #666;
+  
+  &::before, &::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1px solid #ddd;
+  }
+  
+  span {
+    padding: 0 10px;
+    font-size: 14px;
   }
 `;
 
-const SignUpButton = styled.button`
-  background: #6C63FF;
-  color: white;
-  padding: 12px;
-  border: none;
-  border-radius: 4px;
-  font-size: 16px;
-  cursor: pointer;
-  transition: background 0.2s;
-
+const SocialButton = styled(Button)<{ $provider: string }>`
+  background: ${props => 
+    props.$provider === 'google' ? 'white' : 
+    props.$provider === 'facebook' ? '#1877f2' : 
+    props.$provider === 'apple' ? '#000' : 'white'};
+  color: ${props => props.$provider === 'google' ? '#333' : 'white'};
+  border: ${props => props.$provider === 'google' ? '1px solid #ddd' : 'none'};
+  
   &:hover {
-    background: #5b54d6;
+    background: ${props => 
+      props.$provider === 'google' ? '#f5f5f5' : 
+      props.$provider === 'facebook' ? '#1664d9' : 
+      props.$provider === 'apple' ? '#1a1a1a' : '#f5f5f5'};
   }
 `;
 
 const Footer = styled.div`
   text-align: center;
-  margin-top: 24px;
+  margin-top: 1.5rem;
   font-size: 14px;
   color: #666;
-
+  
   a {
-    color: #6C63FF;
+    color: #6c63ff;
     text-decoration: none;
     cursor: pointer;
-
+    
     &:hover {
       text-decoration: underline;
     }
   }
 `;
 
-const ErrorMessage = styled.div`
-  color: #d63031;
-  font-size: 14px;
-  margin-top: -8px;
-`;
-
 const SignupModal: React.FC<SignupModalProps> = ({ onClose, onSwitch, onSignup }) => {
   const { login } = useAuth();
-
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -169,208 +161,204 @@ const SignupModal: React.FC<SignupModalProps> = ({ onClose, onSwitch, onSignup }
     password: '',
     confirmPassword: ''
   });
+  const [isLoading, setIsLoading] = useState(false);
 
-  const [errors, setErrors] = useState({
-    password: '',
-    confirmPassword: ''
-  });
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-
-    // Clear errors when typing
-    if (name === 'password' || name === 'confirmPassword') {
-      setErrors(prev => ({
-        ...prev,
-        [name]: ''
-      }));
-    }
-
-    // Validate password match when either password field changes
-    if (name === 'password' || name === 'confirmPassword') {
-      if (name === 'password' && value !== formData.confirmPassword) {
-        setErrors(prev => ({
-          ...prev,
-          confirmPassword: 'Passwords do not match'
-        }));
-      } else if (name === 'confirmPassword' && value !== formData.password) {
-        setErrors(prev => ({
-          ...prev,
-          confirmPassword: 'Passwords do not match'
-        }));
-      } else {
-        setErrors(prev => ({
-          ...prev,
-          confirmPassword: ''
-        }));
-      }
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleEmailSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Signup form submitted:', formData); // Debug log
+    if (isLoading) return;
+    
+    const toastId = toast.loading('Creating account...', { toastId: 'signup' });
+    setIsLoading(true);
 
     try {
-      // Create auth user
+      if (formData.password !== formData.confirmPassword) {
+        throw new Error('Passwords do not match');
+      }
+
       const userCredential = await createUserWithEmailAndPassword(
         auth,
         formData.email,
         formData.password
       );
 
-      // Store additional user data in Firestore
-      await setDoc(doc(db, 'users', userCredential.user.uid), {
+      const userData = {
         firstName: formData.firstName,
         lastName: formData.lastName,
         email: formData.email,
-        createdAt: new Date().toISOString()
-      });
-
-      console.log('User data stored in Firestore:', userCredential.user.uid);
-
-      // Make sure this data matches your User interface
-      const userData = {
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        email: formData.email
+        createdAt: new Date().toISOString(),
       };
 
-      console.log('Calling login with:', userData); // Debug log
-      login(userData);
+      await setDoc(doc(db, 'users', userCredential.user.uid), userData);
 
-      toast.success('Account created successfully!');
-      onClose();
+      login({
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        email: userData.email,
+      });
+
+      toast.update(toastId, {
+        render: 'Account created successfully!',
+        type: 'success',
+        isLoading: false,
+        autoClose: 2000,
+      });
+
+      setTimeout(onClose, 1000);
     } catch (error: any) {
-      // Enhanced error handling
-      let errorMessage = 'An error occurred during signup';
-      
-      switch (error.code) {
-        case 'auth/email-already-in-use':
-          errorMessage = 'This email is already registered. Please try logging in instead.';
-          break;
-        case 'auth/weak-password':
-          errorMessage = 'Password should be at least 6 characters';
-          break;
-        case 'auth/invalid-email':
-          errorMessage = 'Please enter a valid email address';
-          break;
-        case 'auth/network-request-failed':
-          errorMessage = 'Network error. Please check your connection';
-          break;
-        default:
-          console.error('Signup error:', error);
-      }
-      
-      toast.error(errorMessage);
+      toast.update(toastId, {
+        render: error.message,
+        type: 'error',
+        isLoading: false,
+        autoClose: 3000,
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  // Add Google Sign-in handler
-  const handleGoogleSignIn = async () => {
+  const handleSocialSignup = async (provider: 'google' | 'facebook' | 'apple') => {
+    const toastId = toast.loading('Connecting...', { toastId: `signup-${provider}` });
+    
     try {
-      const provider = new GoogleAuthProvider();
-      const result = await signInWithPopup(auth, provider);
-      
+      const authProvider = 
+        provider === 'google' ? new GoogleAuthProvider() :
+        provider === 'facebook' ? new FacebookAuthProvider() :
+        null;
+
+      if (!authProvider) {
+        toast.update(toastId, {
+          render: 'Service not available',
+          type: 'error',
+          isLoading: false,
+          autoClose: 3000,
+        });
+        return;
+      }
+
+      const result = await signInWithPopup(auth, authProvider);
+      const user = result.user;
+
+      // Get user info from Google profile
+      const firstName = user.displayName?.split(' ')[0] || '';
+      const lastName = user.displayName?.split(' ').slice(1).join(' ') || '';
+      const email = user.email || '';
+
+      // Create or update user document in Firestore
       const userData = {
-        uid: result.user.uid,
-        firstName: result.user.displayName?.split(' ')[0] || '',
-        lastName: result.user.displayName?.split(' ').slice(1).join(' ') || '',
-        email: result.user.email || '',
+        firstName,
+        lastName,
+        email,
+        createdAt: new Date().toISOString(),
+        provider: provider, // Store the sign-in method
+        photoURL: user.photoURL || '',
       };
 
-      onSignup(userData);
-      toast.success('Signed in with Google successfully!');
-      onClose();
-    } catch (error) {
-      toast.error('Error signing in with Google');
-      console.error('Google sign-in error:', error);
+      await setDoc(doc(db, 'users', user.uid), userData, { merge: true });
+
+      // Update auth context
+      login({
+        firstName,
+        lastName,
+        email,
+      });
+
+      toast.update(toastId, {
+        render: 'Account created successfully!',
+        type: 'success',
+        isLoading: false,
+        autoClose: 2000,
+      });
+      
+      setTimeout(onClose, 1000);
+    } catch (error: any) {
+      toast.update(toastId, {
+        render: error.message,
+        type: 'error',
+        isLoading: false,
+        autoClose: 3000,
+      });
     }
   };
 
   return (
-    <ModalOverlay onClick={onClose}>
+    <ModalOverlay onClick={(e) => e.target === e.currentTarget && onClose()}>
       <ModalContent onClick={e => e.stopPropagation()}>
-        <CloseButton onClick={onClose}>×</CloseButton>
-        <Title>Sign Up</Title>
-
-        <SocialButtons>
-          <SocialButton type="button" onClick={handleGoogleSignIn}>
-            <img 
-              src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 488 512'%3E%3Cpath fill='%234285f4' d='M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 123 24.5 166.3 64.9l-67.5 64.9C258.5 52.6 94.3 116.6 94.3 256c0 86.5 69.1 156.6 153.7 156.6 98.2 0 135-70.4 140.8-106.9H248v-85.3h236.1c2.3 12.7 3.9 24.9 3.9 41.4z'/%3E%3C/svg%3E"
-              alt="Google"
+        <Title>Create Account</Title>
+        
+        <StyledForm onSubmit={handleEmailSignup}>
+          <InputGroup>
+            <Input
+              type="text"
+              placeholder="First Name"
+              value={formData.firstName}
+              onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+              required
             />
-            Continue with Google
-          </SocialButton>
-          <SocialButton>
-            <img 
-              src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 320 512'%3E%3Cpath fill='%231877f2' d='M279.14 288l14.22-92.66h-88.91v-60.13c0-25.35 12.42-50.06 52.24-50.06h40.42V6.26S260.43 0 225.36 0c-73.22 0-121.08 44.38-121.08 124.72v70.62H22.89V288h81.39v224h100.17V288z'/%3E%3C/svg%3E"
-              alt="Facebook"
+            <Input
+              type="text"
+              placeholder="Last Name"
+              value={formData.lastName}
+              onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+              required
             />
-            Continue with Facebook
-          </SocialButton>
-        </SocialButtons>
-
-        <Divider>OR</Divider>
-
-        <Form onSubmit={handleSubmit}>
-          <Input
-            type="text"
-            name="firstName"
-            placeholder="First Name"
-            value={formData.firstName}
-            onChange={handleChange}
-            required
-          />
-          <Input
-            type="text"
-            name="lastName"
-            placeholder="Last Name"
-            value={formData.lastName}
-            onChange={handleChange}
-            required
-          />
+          </InputGroup>
+          
           <Input
             type="email"
-            name="email"
             placeholder="Email"
             value={formData.email}
-            onChange={handleChange}
+            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
             required
           />
+          
           <Input
             type="password"
-            name="password"
             placeholder="Password"
             value={formData.password}
-            onChange={handleChange}
+            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
             required
-            minLength={6}
           />
-          {errors.password && <ErrorMessage>{errors.password}</ErrorMessage>}
+          
           <Input
             type="password"
-            name="confirmPassword"
             placeholder="Confirm Password"
             value={formData.confirmPassword}
-            onChange={handleChange}
+            onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
             required
-            minLength={6}
           />
-          {errors.confirmPassword && (
-            <ErrorMessage>{errors.confirmPassword}</ErrorMessage>
-          )}
-          <SignUpButton 
-            type="submit"
-            disabled={!!errors.password || !!errors.confirmPassword}
+          
+          <SubmitButton type="submit" disabled={isLoading}>
+            {isLoading ? 'Creating account...' : 'Sign up with email'}
+          </SubmitButton>
+        </StyledForm>
+
+        <Divider><span>or sign up with</span></Divider>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+          <SocialButton 
+            type="button"
+            $provider="google"
+            onClick={() => handleSocialSignup('google')}
           >
-            Sign Up
-          </SignUpButton>
-        </Form>
+            <FaGoogle /> Continue with Google
+          </SocialButton>
+          
+          <SocialButton 
+            type="button"
+            $provider="facebook"
+            onClick={() => handleSocialSignup('facebook')}
+          >
+            <FaFacebook /> Continue with Facebook
+          </SocialButton>
+          
+          <SocialButton 
+            type="button"
+            $provider="apple"
+            onClick={() => handleSocialSignup('apple')}
+          >
+            <FaApple /> Continue with Apple
+          </SocialButton>
+        </div>
 
         <Footer>
           Already have an account? <a onClick={onSwitch}>Log in</a>

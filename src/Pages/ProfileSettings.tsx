@@ -1,135 +1,173 @@
 import React, { useState } from 'react';
-import Navbar from '../components/navbar';
 import styled from 'styled-components';
-import { toast } from 'react-toastify';
+import Navbar from '../components/navbar';
+import Footer from '../components/footer';
 import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
-const ProfileContainer = styled.div`
-  padding-top: 80px; // To account for fixed navbar
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 100px 20px 40px;
-`;
-
-const ProfileCard = styled.div`
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  padding: 32px;
-`;
-
-const ProfileHeader = styled.div`
+const Container = styled.div`
   display: flex;
-  align-items: center;
-  gap: 24px;
-  margin-bottom: 32px;
-`;
-
-const ProfileAvatar = styled.div`
-  width: 100px;
-  height: 100px;
-  border-radius: 50%;
-  background: #f0f0f0;
-  display: flex;
-  align-items: center;
   justify-content: center;
-  overflow: hidden;
+  padding-top: 80px;
+  padding-bottom: 40px;
+`;
 
-  img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
+const ContentWrapper = styled.div`
+  display: flex;
+  width: 100%;
+  max-width: 800px;
+  background: #fff;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  overflow: hidden;
+`;
+
+const Sidebar = styled.div`
+  width: 250px;
+  background: #f8f9fa;
+  padding: 20px;
+  border-right: 1px solid #e0e0e0;
+`;
+
+const SidebarItem = styled.div`
+  padding: 10px 0;
+  cursor: pointer;
+  color: #333;
+  &:hover {
+    color: #6c63ff;
   }
 `;
 
-const ProfileInfo = styled.div`
+const MainContent = styled.div`
   flex: 1;
+  padding: 40px;
 `;
 
-const ProfileName = styled.h1`
-  margin: 0 0 8px 0;
-  font-size: 24px;
+const Section = styled.div`
+  margin-bottom: 40px;
+`;
+
+const SectionTitle = styled.h2`
+  margin-bottom: 10px;
+`;
+
+const Input = styled.input`
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+`;
+
+const Button = styled.button`
+  background-color: #6c63ff;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  &:hover {
+    background-color: #5b54d6;
+  }
+`;
+
+const ProfileImage = styled.div`
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: #333;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36px;
+  margin-bottom: 20px;
+`;
+
+const EmailContainer = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 10px;
+  margin-bottom: 10px;
+`;
+
+const EmailText = styled.p`
+  margin: 0;
+  font-size: 14px;
   color: #333;
 `;
 
-const ProfileEmail = styled.p`
-  margin: 0;
-  color: #666;
-`;
-
-const SettingsSection = styled.section`
-  margin-top: 32px;
-
-  h2 {
-    font-size: 20px;
-    color: #333;
-    margin-bottom: 16px;
+const EditButton = styled.button`
+  background: none;
+  border: none;
+  color: #6c63ff;
+  cursor: pointer;
+  font-size: 16px;
+  &:hover {
+    color: #5b54d6;
   }
 `;
 
 const ProfileSettings: React.FC = () => {
-  const { user } = useAuth();
-  
-  const handleUpdateProfile = async (data: any) => {
-    try {
-      // Your update logic here
-      toast.success('Profile updated successfully');
-    } catch (error: any) {
-      toast.error('Error updating profile: ' + error.message);
-    }
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+  const [isEditing, setIsEditing] = useState(false);
+
+  const handleEditClick = () => {
+    setIsEditing(true);
   };
 
-  const handleUpdatePreferences = async (data: any) => {
-    try {
-      // Your preferences update logic here
-      toast.success('Preferences saved successfully');
-    } catch (error: any) {
-      toast.error('Error saving preferences: ' + error.message);
-    }
+  const handleLogout = async () => {
+    await logout();
+    navigate('/'); // Navigate to homepage after logout
   };
 
   return (
-    <>
-      <Navbar 
-        setShowLoginModal={() => {}}
-        setShowSignupModal={() => {}}
-        isScrolled={false}
-        scrollDirection={null}
-        isLoggedIn={true}
-        onLogout={() => {}}
-      />
-      <ProfileContainer>
-        <ProfileCard>
-          <ProfileHeader>
-            <ProfileAvatar>
-              <img 
-                src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%236C63FF' d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z'/%3E%3C/svg%3E"
-                alt="Profile"
-              />
-            </ProfileAvatar>
-            <ProfileInfo>
-              <ProfileName>{user?.firstName} {user?.lastName || 'John Doe'}</ProfileName>
-              <ProfileEmail>{user?.email || 'john.doe@example.com'}</ProfileEmail>
-            </ProfileInfo>
-          </ProfileHeader>
-
-          <SettingsSection>
-            <h2>Account Settings</h2>
-            {/* Add your settings forms with handleUpdateProfile */}
-          </SettingsSection>
-
-          <SettingsSection>
-            <h2>Preferences</h2>
-            {/* Add preferences controls with handleUpdatePreferences */}
-          </SettingsSection>
-
-          <SettingsSection>
-            <h2>Privacy</h2>
-            {/* Add privacy settings here */}
-          </SettingsSection>
-        </ProfileCard>
-      </ProfileContainer>
-    </>
+    <div>
+      <Navbar setShowLoginModal={() => {}} setShowSignupModal={() => {}} isScrolled={false} scrollDirection={null} isLoggedIn={true} onLogout={handleLogout} />
+      <Container>
+        <ContentWrapper>
+          <Sidebar>
+            <ProfileImage>{user ? `${user.firstName.charAt(0)}${user.lastName.charAt(0)}` : ''}</ProfileImage>
+            <strong>{user ? `${user.firstName} ${user.lastName}` : ''}</strong>
+            <SidebarItem>View public profile</SidebarItem>
+            <SidebarItem>Profile</SidebarItem>
+            <SidebarItem>Photo</SidebarItem>
+            <SidebarItem>Account Security</SidebarItem>
+            <SidebarItem>Subscriptions</SidebarItem>
+            <SidebarItem>Payment methods</SidebarItem>
+            <SidebarItem>Privacy</SidebarItem>
+            <SidebarItem>Notification Preferences</SidebarItem>
+            <SidebarItem>API clients</SidebarItem>
+            <SidebarItem onClick={handleLogout}>Log out</SidebarItem>
+          </Sidebar>
+          <MainContent>
+            <Section>
+              <SectionTitle>Account</SectionTitle>
+              <p>Edit your account settings and change your password here.</p>
+            </Section>
+            <Section>
+              <SectionTitle>Email:</SectionTitle>
+              <EmailContainer>
+                <EmailText>Your email address is: <strong>{user?.email}</strong></EmailText>
+                <EditButton onClick={handleEditClick}>✎</EditButton>
+              </EmailContainer>
+            </Section>
+            <Section>
+              <SectionTitle>Password:</SectionTitle>
+              <Input type="password" placeholder="Enter current password" />
+              <Input type="password" placeholder="Enter new password" />
+              <Input type="password" placeholder="Re-type new password" />
+              <Button>Change password</Button>
+            </Section>
+          </MainContent>
+        </ContentWrapper>
+      </Container>
+      <Footer />
+    </div>
   );
 };
 
