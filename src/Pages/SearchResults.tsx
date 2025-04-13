@@ -1,123 +1,147 @@
-import React, { useState, useEffect } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import styled from 'styled-components';
 import Navbar from '../components/navbar';
 import Footer from '../components/footer';
+import { useSearch } from '../context/SearchContext';
 import { useAuth } from '../context/AuthContext';
 
-const SearchContainer = styled.div`
-  padding: 2rem;
+const Container = styled.div`
+  padding-top: 80px;
+  min-height: 100vh;
+  background: var(--bg-primary);
+`;
+
+const Content = styled.div`
   max-width: 1200px;
-  margin: 80px auto 0;
+  margin: 0 auto;
+  padding: 40px 20px;
 `;
 
 const SearchHeader = styled.div`
-  margin-bottom: 2rem;
+  margin-bottom: 32px;
+`;
+
+const SearchQuery = styled.h1`
+  color: #333;
+  margin-bottom: 8px;
 `;
 
 const ResultsCount = styled.p`
   color: #666;
-  margin-bottom: 1rem;
 `;
 
-const SearchResults = styled.div`
+const ResultsGrid = styled.div`
   display: grid;
-  gap: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 24px;
 `;
 
 const ResultCard = styled.div`
-  padding: 1rem;
-  border: 1px solid #eee;
-  border-radius: 8px;
-  transition: all 0.2s;
-  cursor: pointer;
-
-  &:hover {
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-  }
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 `;
 
-interface SearchResult {
-  id: string;
-  title: string;
-  description: string;
-  type: 'course' | 'tutorial' | 'article';
-}
+const ResultType = styled.div`
+  display: inline-block;
+  padding: 4px 8px;
+  background: #f0f4ff;
+  color: #6c63ff;
+  border-radius: 4px;
+  font-size: 12px;
+  margin-bottom: 12px;
+`;
+
+const ResultTitle = styled.h3`
+  color: #333;
+  margin: 0 0 8px 0;
+  font-size: 18px;
+`;
+
+const ResultDescription = styled.p`
+  color: #666;
+  font-size: 14px;
+  line-height: 1.5;
+  margin: 0;
+`;
+
+const NoResults = styled.div`
+  text-align: center;
+  padding: 48px;
+  color: #666;
+`;
 
 const SearchResultsPage: React.FC = () => {
-  const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
-  const query = searchParams.get('q') || '';
-  const [results, setResults] = useState<SearchResult[]>([]);
-  const [loading, setLoading] = useState(true);
+  const location = useLocation();
+  const { search, searchResults, isSearching } = useSearch();
   const { isLoggedIn } = useAuth();
-  const [showLoginModal, setShowLoginModal] = useState(false);
-  const [showSignupModal, setShowSignupModal] = useState(false);
-
-  // Handle scroll direction
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [scrollDirection, setScrollDirection] = useState<'up' | 'down' | null>(null);
-
-  const handleLogout = () => {
-    // Handle logout logic if needed
-  };
+  const query = new URLSearchParams(location.search).get('q') || '';
 
   useEffect(() => {
-    const fetchResults = async () => {
-      setLoading(true);
-      try {
-        // Replace this with your actual search API call
-        const response = await fetch(`/api/search?q=${query}`);
-        const data = await response.json();
-        setResults(data);
-      } catch (error) {
-        console.error('Search error:', error);
-        setResults([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     if (query) {
-      fetchResults();
+      search(query);
     }
-  }, [query]);
+  }, [query, search]);
+
+  const groupedResults = searchResults.reduce((acc, result) => {
+    const { type } = result;
+    if (!acc[type]) {
+      acc[type] = [];
+    }
+    acc[type].push(result);
+    return acc;
+  }, {} as Record<string, typeof searchResults>);
 
   return (
-    <div>
-      <Navbar 
-        setShowLoginModal={setShowLoginModal}
-        setShowSignupModal={setShowSignupModal}
-        isScrolled={isScrolled}
-        scrollDirection={scrollDirection}
+    <>
+      <Navbar
+        setShowLoginModal={() => {}}
+        setShowSignupModal={() => {}}
+        isScrolled={false}
+        scrollDirection={null}
         isLoggedIn={isLoggedIn}
-        onLogout={handleLogout}
+        onLogout={() => {}}
       />
-      <SearchContainer>
-        <SearchHeader>
-          <h1>Search Results for "{query}"</h1>
-          <ResultsCount>{results.length} results found</ResultsCount>
-        </SearchHeader>
-        
-        {loading ? (
-          <div>Loading...</div>
-        ) : (
-          <SearchResults>
-            {results.map((result) => (
-              <ResultCard 
-                key={result.id}
-                onClick={() => navigate(`/courses/${result.id}`)}
-              >
-                <h3>{result.title}</h3>
-                <p>{result.description}</p>
-                <span>{result.type}</span>
-              </ResultCard>
-            ))}
-          </SearchResults>
-        )}
-      </SearchContainer>
+      <Container>
+        <Content>
+          <SearchHeader>
+            <SearchQuery>Search results for "{query}"</SearchQuery>
+            <ResultsCount>
+              {isSearching
+                ? 'Searching...'
+                : `Found ${searchResults.length} results`}
+            </ResultsCount>
+          </SearchHeader>
+
+          {Object.entries(groupedResults).map(([type, results]) => (
+            <div key={type}>
+              <h2 style={{ marginTop: '32px', marginBottom: '16px' }}>
+                {type.charAt(0).toUpperCase() + type.slice(1)}s
+              </h2>
+              <ResultsGrid>
+                {results.map((result) => (
+                  <ResultCard key={result.id}>
+                    <ResultType>{result.type}</ResultType>
+                    <ResultTitle>{result.title}</ResultTitle>
+                    <ResultDescription>{result.description}</ResultDescription>
+                  </ResultCard>
+                ))}
+              </ResultsGrid>
+            </div>
+          ))}
+
+          {!isSearching && searchResults.length === 0 && (
+            <NoResults>
+              <h2>No results found</h2>
+              <p>Try different keywords or check your spelling</p>
+            </NoResults>
+          )}
+        </Content>
+      </Container>
       <Footer />
-    </div>
+    </>
   );
 };
 

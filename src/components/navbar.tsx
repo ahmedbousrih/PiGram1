@@ -8,6 +8,7 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { FaUser, FaCog, FaSignOutAlt, FaUserCircle, FaChartLine, FaQuestionCircle, FaSun, FaMoon, FaSearch } from 'react-icons/fa';
 import { IoMdPerson } from 'react-icons/io';
+import { useSearch } from '../context/SearchContext';
 
 // Add styled components for the navbar
 const MainHeader = styled.header<{ $isScrolled: boolean, $scrollDirection: string | null }>`
@@ -255,7 +256,8 @@ const NavItem = styled.div`
   }
 `;
 
-const NavLink = styled.div`
+const NavLink = styled(Link)`
+  text-decoration: none;
   cursor: pointer;
   padding: 0.5rem;
   color: var(--text-primary);
@@ -286,29 +288,92 @@ const Dropdown = styled.div`
 
 const SearchContainer = styled.div`
   position: relative;
-  margin-right: 1rem;
+  flex: 1;
+  max-width: 600px;
+  margin: 0 20px;
 `;
 
 const SearchInput = styled.input`
-  padding: 0.5rem 1rem;
-  padding-left: 2.5rem;
-  border: 1px solid #ddd;
-  border-radius: 20px;
-  outline: none;
-  width: 200px;
-  transition: all 0.3s;
-  
+  width: 100%;
+  padding: 10px 40px 10px 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 14px;
+  background: white;
+  transition: all 0.3s ease;
+
   &:focus {
-    width: 300px;
+    outline: none;
     border-color: #6c63ff;
+    box-shadow: 0 0 0 2px rgba(108, 99, 255, 0.2);
   }
 `;
 
-const SearchIcon = styled(FaSearch)`
+const SearchButton = styled.button`
   position: absolute;
-  left: 0.75rem;
+  right: 8px;
   top: 50%;
   transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #6c63ff;
+  cursor: pointer;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &:hover {
+    color: #5048e5;
+  }
+`;
+
+const SearchResults = styled.div`
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  margin-top: 4px;
+  max-height: 400px;
+  overflow-y: auto;
+  z-index: 1000;
+`;
+
+const SearchResultItem = styled(Link)`
+  display: block;
+  padding: 12px 16px;
+  text-decoration: none;
+  color: #333;
+  border-bottom: 1px solid #e5e7eb;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &:hover {
+    background: #f9fafb;
+  }
+`;
+
+const ResultTitle = styled.div`
+  font-weight: 500;
+  margin-bottom: 4px;
+`;
+
+const ResultType = styled.span`
+  font-size: 12px;
+  color: #6c63ff;
+  background: #f0f4ff;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-left: 8px;
+`;
+
+const ResultDescription = styled.div`
+  font-size: 12px;
   color: #666;
 `;
 
@@ -352,7 +417,7 @@ const LoadingAvatar = styled.div`
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: #f5f5f5;
+    background: #f5f5f5;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -401,6 +466,8 @@ const Navbar: React.FC<NavbarProps> = ({
   const { isDarkMode, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
+  const [showResults, setShowResults] = useState(false);
+  const { search, searchResults, isSearching } = useSearch();
 
   const effectiveIsLoggedIn = isLoading ? false : authIsLoggedIn;
 
@@ -434,12 +501,20 @@ const Navbar: React.FC<NavbarProps> = ({
     navigate('/profile'); // Navigate to profile settings page
   };
 
-  const handleSearch = (e: React.FormEvent) => {
+  const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
-      setSearchQuery('');
+      await search(searchQuery);
+      if (searchResults.length > 0) {
+        setShowResults(true);
+      }
     }
+  };
+
+  const handleSearchClick = (path: string) => {
+    setShowResults(false);
+    setSearchQuery('');
+    navigate(path);
   };
 
   return (
@@ -450,19 +525,13 @@ const Navbar: React.FC<NavbarProps> = ({
             <span>π</span>gram
           </Logo>
 
-          <NavLinks>
+        <NavLinks>
             <NavItem>
-              <NavLink>Courses</NavLink>
-              <Dropdown>
-                <DropdownItem to="/courses/mathematics">Mathematics</DropdownItem>
-                <DropdownItem to="/courses/programming">Programming</DropdownItem>
-                <DropdownItem to="/courses/data-science">Data Science</DropdownItem>
-                <DropdownItem to="/courses/machine-learning">Machine Learning</DropdownItem>
-              </Dropdown>
+              <NavLink to="/courses">Courses</NavLink>
             </NavItem>
 
             <NavItem>
-              <NavLink>Services</NavLink>
+              <NavLink to="/services">Services</NavLink>
               <Dropdown>
                 <DropdownItem to="/services/tutoring">1-on-1 Tutoring</DropdownItem>
                 <DropdownItem to="/services/mentorship">Mentorship</DropdownItem>
@@ -472,23 +541,24 @@ const Navbar: React.FC<NavbarProps> = ({
             </NavItem>
 
             <NavItem>
-              <Link to="/about" style={{ textDecoration: 'none', color: 'inherit' }}>
-                <NavLink>About</NavLink>
-              </Link>
+              <NavLink to="/about">About</NavLink>
             </NavItem>
 
             <form onSubmit={handleSearch}>
               <SearchContainer>
-                <SearchIcon />
                 <SearchInput
                   type="text"
-                  placeholder="Search courses..."
+                  placeholder="Search courses, lessons, and services..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
+                  onFocus={() => searchQuery && setShowResults(true)}
                 />
+                <SearchButton type="submit">
+                  <FaSearch />
+                </SearchButton>
               </SearchContainer>
             </form>
-          </NavLinks>
+        </NavLinks>
         </LeftSection>
 
         <RightSection>
@@ -505,7 +575,7 @@ const Navbar: React.FC<NavbarProps> = ({
               <UserAvatar>
                 {getInitials(user.firstName, user.lastName)}
               </UserAvatar>
-              <ProfileDropdown>
+                <ProfileDropdown>
                 <ProfileDetails>
                   <ProfileImage>
                     {getInitials(user.firstName, user.lastName)}
@@ -530,7 +600,7 @@ const Navbar: React.FC<NavbarProps> = ({
                 <DropdownItem to="/" onClick={handleLogout}>
                   <FaSignOutAlt /> Log Out
                 </DropdownItem>
-              </ProfileDropdown>
+                </ProfileDropdown>
             </ProfileContainer>
           ) : (
             <AuthButtons>
@@ -544,6 +614,32 @@ const Navbar: React.FC<NavbarProps> = ({
           )}
         </RightSection>
       </NavContent>
+
+      {showResults && searchResults.length > 0 && (
+        <SearchResults>
+          {searchResults.slice(0, 5).map((result) => (
+            <SearchResultItem
+              key={result.id}
+              to={result.path}
+              onClick={() => handleSearchClick(result.path)}
+            >
+              <ResultTitle>
+                {result.title}
+                <ResultType>{result.type}</ResultType>
+              </ResultTitle>
+              <ResultDescription>{result.description}</ResultDescription>
+            </SearchResultItem>
+          ))}
+          {searchResults.length > 5 && (
+            <SearchResultItem
+              to={`/search?q=${encodeURIComponent(searchQuery)}`}
+              onClick={() => setShowResults(false)}
+            >
+              View all {searchResults.length} results
+            </SearchResultItem>
+          )}
+        </SearchResults>
+      )}
     </NavbarContainer>
   );
 };
