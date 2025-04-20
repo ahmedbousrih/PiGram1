@@ -2,7 +2,7 @@
 import { initializeApp } from '@firebase/app';
 import { getAnalytics } from 'firebase/analytics';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
-import { getFirestore, initializeFirestore, enableMultiTabIndexedDbPersistence } from 'firebase/firestore';
+import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 
 const firebaseConfig = {
@@ -20,8 +20,10 @@ const app = initializeApp(firebaseConfig);
 
 const analytics = typeof window !== 'undefined' ? getAnalytics(app) : null;
 
-// Initialize Auth
+// Initialize services
 export const auth = getAuth(app);
+export const db = getFirestore(app);
+export const storage = getStorage(app);
 
 // Add auth state observer
 onAuthStateChanged(auth, (user) => {
@@ -36,29 +38,6 @@ onAuthStateChanged(auth, (user) => {
     console.log('User is signed out');
   }
 });
-
-// Initialize Firestore with settings
-export const db = initializeFirestore(app, {
-  cacheSizeBytes: 50000000,  // 50 MB
-  experimentalForceLongPolling: true,
-});
-
-// Enable multi-tab persistence
-enableMultiTabIndexedDbPersistence(db)
-  .then(() => {
-    console.log('Persistence enabled successfully');
-  })
-  .catch((err) => {
-    if (err.code === 'failed-precondition') {
-      // Multiple tabs open, persistence can only be enabled in one tab at a time
-      console.warn('Multiple tabs open, persistence enabled in another tab');
-    } else if (err.code === 'unimplemented') {
-      // The current browser doesn't support persistence
-      console.warn('Browser does not support persistence');
-    }
-  });
-
-export const storage = getStorage(app);
 
 export default app;
 

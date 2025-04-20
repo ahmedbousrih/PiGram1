@@ -9,6 +9,8 @@ import { useTheme } from '../context/ThemeContext';
 import { FaUser, FaCog, FaSignOutAlt, FaUserCircle, FaChartLine, FaQuestionCircle, FaSun, FaMoon, FaSearch } from 'react-icons/fa';
 import { IoMdPerson } from 'react-icons/io';
 import { useSearch } from '../context/SearchContext';
+import { useCourseProgress } from '../context/CourseProgressContext';
+import { useModal } from '../context/ModalContext';
 
 // Add styled components for the navbar
 const MainHeader = styled.header<{ $isScrolled: boolean, $scrollDirection: string | null }>`
@@ -439,6 +441,41 @@ const LoadingSpinner = styled.div`
   }
 `;
 
+const ProgressButton = styled(Link)`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: #6c63ff;
+  color: white;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.2s;
+`;
+
+const ProgressInfo = styled.div`
+  display: flex;
+  flex-direction: column;
+  font-size: 12px;
+`;
+
+const ProgressBarMini = styled.div`
+  width: 100px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-left: 8px;
+`;
+
+const ProgressFill = styled.div<{ $progress: number }>`
+  width: ${props => props.$progress}%;
+  height: 100%;
+  background: white;
+  transition: width 0.3s ease;
+`;
+
 interface User {
   firstName: string;
   lastName: string;
@@ -446,20 +483,16 @@ interface User {
 }
 
 interface NavbarProps {
-  setShowLoginModal: (value: boolean) => void;
-  setShowSignupModal: (value: boolean) => void;
   isScrolled: boolean;
-  scrollDirection: string | null;
+  scrollDirection: 'up' | 'down' | null;
   isLoggedIn: boolean;
   onLogout: () => void;
 }
 
 const Navbar: React.FC<NavbarProps> = ({
-  setShowLoginModal,
-  setShowSignupModal,
   isScrolled,
   scrollDirection,
-  isLoggedIn: parentIsLoggedIn,
+  isLoggedIn,
   onLogout
 }) => {
   const { user, isLoggedIn: authIsLoggedIn, isLoading } = useAuth();
@@ -468,6 +501,10 @@ const Navbar: React.FC<NavbarProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [showResults, setShowResults] = useState(false);
   const { search, searchResults, isSearching } = useSearch();
+  const { getTotalProgress, getLastAccessed } = useCourseProgress();
+  const totalProgress = getTotalProgress();
+  const lastAccessed = getLastAccessed();
+  const { setShowLoginModal, setShowSignupModal } = useModal();
 
   const effectiveIsLoggedIn = isLoading ? false : authIsLoggedIn;
 
@@ -611,6 +648,19 @@ const Navbar: React.FC<NavbarProps> = ({
                 Sign up
               </SignupButton>
             </AuthButtons>
+          )}
+
+          {effectiveIsLoggedIn && (
+            <ProgressButton to="/progress">
+              <FaChartLine className="progress-icon" />
+              <ProgressInfo>
+                <span>{lastAccessed?.title || 'No recent activity'}</span>
+                <ProgressBarMini>
+                  <ProgressFill $progress={totalProgress} />
+                  <span>{totalProgress.toFixed(1)}%</span>
+                </ProgressBarMini>
+              </ProgressInfo>
+            </ProgressButton>
           )}
         </RightSection>
       </NavContent>

@@ -4,6 +4,7 @@ import Navbar from '../components/navbar';
 import Footer from '../components/footer';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { auth } from '../config/firebase';
 
 const Container = styled.div`
   display: flex;
@@ -112,22 +113,26 @@ const EditButton = styled.button`
 `;
 
 const ProfileSettings: React.FC = () => {
-  const { user, logout } = useAuth();
-  const navigate = useNavigate();
-  const [isEditing, setIsEditing] = useState(false);
-
-  const handleEditClick = () => {
-    setIsEditing(true);
-  };
+  const { user } = useAuth();
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [scrollDirection, setScrollDirection] = useState<'up' | 'down' | null>(null);
 
   const handleLogout = async () => {
-    await logout();
-    navigate('/'); // Navigate to homepage after logout
+    try {
+      await auth.signOut();
+    } catch (error) {
+      console.error('Error logging out:', error);
+    }
   };
 
   return (
     <div>
-      <Navbar setShowLoginModal={() => {}} setShowSignupModal={() => {}} isScrolled={false} scrollDirection={null} isLoggedIn={true} onLogout={handleLogout} />
+      <Navbar
+        isScrolled={isScrolled}
+        scrollDirection={scrollDirection}
+        isLoggedIn={!!user}
+        onLogout={handleLogout}
+      />
       <Container>
         <ContentWrapper>
           <Sidebar>
@@ -153,7 +158,7 @@ const ProfileSettings: React.FC = () => {
               <SectionTitle>Email:</SectionTitle>
               <EmailContainer>
                 <EmailText>Your email address is: <strong>{user?.email}</strong></EmailText>
-                <EditButton onClick={handleEditClick}>✎</EditButton>
+                <EditButton>✎</EditButton>
               </EmailContainer>
             </Section>
             <Section>

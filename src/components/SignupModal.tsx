@@ -6,12 +6,7 @@ import { auth, db } from '../config/firebase';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-toastify';
 import { FaGoogle, FaFacebook, FaApple } from 'react-icons/fa';
-
-interface SignupModalProps {
-  onClose: () => void;
-  onSwitch: () => void;
-  onSignup: (userData: any) => void;
-}
+import { useModal } from '../context/ModalContext';
 
 const ModalOverlay = styled.div`
   position: fixed;
@@ -152,7 +147,8 @@ const Footer = styled.div`
   }
 `;
 
-const SignupModal: React.FC<SignupModalProps> = ({ onClose, onSwitch, onSignup }) => {
+const SignupModal: React.FC = () => {
+  const { showSignupModal, setShowSignupModal } = useModal();
   const { login } = useAuth();
   const [formData, setFormData] = useState({
     firstName: '',
@@ -203,7 +199,7 @@ const SignupModal: React.FC<SignupModalProps> = ({ onClose, onSwitch, onSignup }
         autoClose: 2000,
       });
 
-      setTimeout(onClose, 1000);
+      setTimeout(() => setShowSignupModal(false), 1000);
     } catch (error: any) {
       toast.update(toastId, {
         render: error.message,
@@ -269,7 +265,7 @@ const SignupModal: React.FC<SignupModalProps> = ({ onClose, onSwitch, onSignup }
         autoClose: 2000,
       });
       
-      setTimeout(onClose, 1000);
+      setTimeout(() => setShowSignupModal(false), 1000);
     } catch (error: any) {
       toast.update(toastId, {
         render: error.message,
@@ -280,8 +276,8 @@ const SignupModal: React.FC<SignupModalProps> = ({ onClose, onSwitch, onSignup }
     }
   };
 
-  return (
-    <ModalOverlay onClick={(e) => e.target === e.currentTarget && onClose()}>
+  return showSignupModal ? (
+    <ModalOverlay onClick={(e) => e.target === e.currentTarget && setShowSignupModal(false)}>
       <ModalContent onClick={e => e.stopPropagation()}>
         <Title>Create Account</Title>
         
@@ -361,11 +357,11 @@ const SignupModal: React.FC<SignupModalProps> = ({ onClose, onSwitch, onSignup }
         </div>
 
         <Footer>
-          Already have an account? <a onClick={onSwitch}>Log in</a>
+          Already have an account? <a onClick={() => setShowSignupModal(false)}>Log in</a>
         </Footer>
       </ModalContent>
     </ModalOverlay>
-  );
+  ) : null;
 };
 
 export default SignupModal;

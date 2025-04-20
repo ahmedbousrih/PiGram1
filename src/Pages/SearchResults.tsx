@@ -1,10 +1,11 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import styled from 'styled-components';
 import Navbar from '../components/navbar';
 import Footer from '../components/footer';
 import { useSearch } from '../context/SearchContext';
 import { useAuth } from '../context/AuthContext';
+import { auth } from '../config/firebase';
 
 const Container = styled.div`
   padding-top: 80px;
@@ -76,7 +77,9 @@ const NoResults = styled.div`
 const SearchResultsPage: React.FC = () => {
   const location = useLocation();
   const { search, searchResults, isSearching } = useSearch();
-  const { isLoggedIn } = useAuth();
+  const { user } = useAuth();
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [scrollDirection, setScrollDirection] = useState<'up' | 'down' | null>(null);
   const query = new URLSearchParams(location.search).get('q') || '';
 
   useEffect(() => {
@@ -94,15 +97,21 @@ const SearchResultsPage: React.FC = () => {
     return acc;
   }, {} as Record<string, typeof searchResults>);
 
+  const handleLogout = async () => {
+    try {
+      await auth.signOut();
+    } catch (error) {
+      console.error('Error logging out:', error);
+    }
+  };
+
   return (
     <>
       <Navbar
-        setShowLoginModal={() => {}}
-        setShowSignupModal={() => {}}
-        isScrolled={false}
-        scrollDirection={null}
-        isLoggedIn={isLoggedIn}
-        onLogout={() => {}}
+        isScrolled={isScrolled}
+        scrollDirection={scrollDirection}
+        isLoggedIn={!!user}
+        onLogout={handleLogout}
       />
       <Container>
         <Content>

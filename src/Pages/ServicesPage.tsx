@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import styled from 'styled-components';
 import { Link } from 'react-router-dom';
 import Navbar from '../components/navbar';
 import Footer from '../components/footer';
 import { useAuth } from '../context/AuthContext';
 import { FaChalkboardTeacher, FaUserGraduate, FaLaptopCode, FaComments } from 'react-icons/fa';
+import { auth } from '../config/firebase';
 
 const Container = styled.div`
   padding-top: 80px;
@@ -98,17 +99,25 @@ const services = [
 ];
 
 const ServicesPage: React.FC = () => {
-  const { isLoggedIn } = useAuth();
+  const { user } = useAuth();
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [scrollDirection, setScrollDirection] = useState<'up' | 'down' | null>(null);
+
+  const handleLogout = async () => {
+    try {
+      await auth.signOut();
+    } catch (error) {
+      console.error('Error logging out:', error);
+    }
+  };
 
   return (
     <>
       <Navbar
-        setShowLoginModal={() => {}}
-        setShowSignupModal={() => {}}
-        isScrolled={false}
-        scrollDirection={null}
-        isLoggedIn={isLoggedIn}
-        onLogout={() => {}}
+        isScrolled={isScrolled}
+        scrollDirection={scrollDirection}
+        isLoggedIn={!!user}
+        onLogout={handleLogout}
       />
       <Container>
         <Content>

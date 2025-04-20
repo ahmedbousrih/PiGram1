@@ -1,18 +1,37 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Navbar from '../components/navbar';
 import Footer from '../components/footer';
 import './about.css';
 import mibounImage from '../Pictures/ahmed.jpg';
 import eesaaaImage from '../Pictures/isa.jpg';
 import frmboyImage from '../Pictures/melki.jpg';
+import { useAuth } from '../context/AuthContext';
+import { auth } from '../config/firebase';
 
 const About: React.FC = () => {
+  const { user } = useAuth();
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [scrollDirection, setScrollDirection] = useState<'up' | 'down' | null>(null);
+
+  const handleLogout = async () => {
+    try {
+      await auth.signOut();
+    } catch (error) {
+      console.error('Error logging out:', error);
+    }
+  };
+
   const mathElements = ['∫', '∑', 'π', '√', '∞', 'λ', 'θ', '∂', '±', '∈'];
   const codeElements = ['def', '{}', 'for', '</>', 'class'];
 
   return (
     <div>
-      <Navbar setShowLoginModal={() => {}} setShowSignupModal={() => {}} isScrolled={false} scrollDirection={null} isLoggedIn={true} onLogout={() => {}} />
+      <Navbar
+        isScrolled={isScrolled}
+        scrollDirection={scrollDirection}
+        isLoggedIn={!!user}
+        onLogout={handleLogout}
+      />
 
       <div className="about-container">
         <div className="floating-math">

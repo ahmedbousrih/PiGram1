@@ -6,11 +6,7 @@ import { auth, db } from '../config/firebase';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-toastify';
 import { FaGoogle, FaFacebook, FaApple } from 'react-icons/fa';
-
-interface LoginModalProps {
-  onClose: () => void;
-  onSwitch: () => void;
-}
+import { useModal } from '../context/ModalContext';
 
 const ModalOverlay = styled.div`
   position: fixed;
@@ -18,20 +14,20 @@ const ModalOverlay = styled.div`
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
-  justify-content: center;
   align-items: center;
+  justify-content: center;
   z-index: 1000;
 `;
 
 const ModalContent = styled.div`
+  position: relative;
   background: white;
-  padding: 2.5rem;
-  border-radius: 12px;
-  width: 100%;
+  padding: 40px;
+  border-radius: 8px;
   max-width: 400px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  width: 90%;
 `;
 
 const Title = styled.h2`
@@ -53,7 +49,7 @@ const Input = styled.input`
   border-radius: 8px;
   font-size: 1rem;
   transition: border-color 0.2s;
-  
+
   &:focus {
     border-color: #6c63ff;
     outline: none;
@@ -77,11 +73,11 @@ const Button = styled.button`
 const SubmitButton = styled(Button)`
   background: #6c63ff;
   color: white;
-  
+
   &:hover {
     background: #5b54d6;
   }
-  
+
   &:disabled {
     background: #9995ff;
     cursor: not-allowed;
@@ -94,7 +90,7 @@ const Divider = styled.div`
   text-align: center;
   margin: 1.5rem 0;
   color: #666;
-  
+
   &::before, &::after {
     content: '';
     flex: 1;
@@ -128,23 +124,41 @@ const Footer = styled.div`
   margin-top: 1.5rem;
   font-size: 14px;
   color: #666;
-  
+
   a {
     color: #6c63ff;
     text-decoration: none;
     cursor: pointer;
-    
+
     &:hover {
       text-decoration: underline;
     }
   }
 `;
 
-const LoginModal: React.FC<LoginModalProps> = ({ onClose, onSwitch }) => {
+const CloseButton = styled.button`
+  position: absolute;
+  right: 20px;
+  top: 20px;
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #666;
+
+  &:hover {
+    color: #333;
+  }
+`;
+
+const LoginModal: React.FC = () => {
+  const { showLoginModal, setShowLoginModal, closeAllModals } = useModal();
   const { login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
+  if (!showLoginModal) return null;
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -172,7 +186,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ onClose, onSwitch }) => {
           autoClose: 2000,
         });
 
-        setTimeout(onClose, 1000);
+        setTimeout(() => setShowLoginModal(false), 1000);
       }
     } catch (error: any) {
       toast.update(toastId, {
@@ -213,11 +227,11 @@ const LoginModal: React.FC<LoginModalProps> = ({ onClose, onSwitch }) => {
       const userData = userDoc.data();
 
       if (userData) {
-        login({
-          firstName: userData.firstName,
-          lastName: userData.lastName,
-          email: userData.email,
-        });
+      login({
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        email: userData.email,
+      });
 
         toast.update(toastId, {
           render: 'Logged in successfully!',
@@ -226,7 +240,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ onClose, onSwitch }) => {
           autoClose: 2000,
         });
         
-        setTimeout(onClose, 1000);
+        setTimeout(() => setShowLoginModal(false), 1000);
       } else {
         // If user doesn't exist in Firestore, create a new document
         const newUserData = {
@@ -253,7 +267,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ onClose, onSwitch }) => {
           autoClose: 2000,
         });
         
-        setTimeout(onClose, 1000);
+        setTimeout(() => setShowLoginModal(false), 1000);
       }
     } catch (error: any) {
       toast.update(toastId, {
@@ -266,26 +280,27 @@ const LoginModal: React.FC<LoginModalProps> = ({ onClose, onSwitch }) => {
   };
 
   return (
-    <ModalOverlay onClick={(e) => e.target === e.currentTarget && onClose()}>
+    <ModalOverlay onClick={() => closeAllModals()}>
       <ModalContent onClick={e => e.stopPropagation()}>
+        <CloseButton onClick={() => closeAllModals()}>×</CloseButton>
         <Title>Welcome Back</Title>
-        
+
         <StyledForm onSubmit={handleEmailLogin}>
-          <Input
-            type="email"
-            placeholder="Email"
+            <Input
+              type="email"
+              placeholder="Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            required
-          />
+              required
+            />
           
-          <Input
+            <Input
             type="password"
-            placeholder="Password"
+              placeholder="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            required
-          />
+              required
+            />
           
           <SubmitButton type="submit" disabled={isLoading}>
             {isLoading ? 'Logging in...' : 'Continue with email'}
@@ -297,7 +312,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ onClose, onSwitch }) => {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
           <SocialButton 
             type="button"
-            $provider="google"
+            $provider="google" 
             onClick={() => handleSocialLogin('google')}
           >
             <FaGoogle /> Continue with Google
@@ -321,7 +336,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ onClose, onSwitch }) => {
         </div>
 
         <Footer>
-          Don't have an account? <a onClick={onSwitch}>Sign up</a>
+          Don't have an account? <a onClick={() => setShowLoginModal(false)}>Sign up</a>
         </Footer>
       </ModalContent>
     </ModalOverlay>

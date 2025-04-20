@@ -14,22 +14,15 @@ import Navbar from '../components/navbar';
 import Footer from '../components/footer';
 import { useAuth } from '../context/AuthContext';
 import { doc, setDoc, serverTimestamp } from '@firebase/firestore';
-import { db } from '../config/firebase';
-
-interface LoginModalProps {
-  onClose: () => void;
-  onSwitch: () => void;
-}
+import { db, auth } from '../config/firebase';
 
 const HomePage: React.FC = () => {
-  const [showLoginModal, setShowLoginModal] = useState(false);
-  const [showSignupModal, setShowSignupModal] = useState(false);
+  const { user } = useAuth();
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [scrollDirection, setScrollDirection] = useState<'up' | 'down' | null>(null);
   const [searchValue, setSearchValue] = useState('');
   const [suggestions, setSuggestions] = useState<string[]>([]);
-  const { isScrolled, scrollDirection } = useScrollEffect();
   const subtitleRef = useRef<HTMLParagraphElement>(null);
-  const { isLoggedIn, logout } = useAuth();
-  const [isLoggedInState, setIsLoggedIn] = useState(false);
 
   // Sample search suggestions
   const sampleSuggestions = [
@@ -106,64 +99,23 @@ const HomePage: React.FC = () => {
     return () => observer.disconnect();
   }, []);
 
-  // Add this effect to check login status on component mount
-  useEffect(() => {
-    // Check if user is logged in
-    // For example, check for token in localStorage
-    const token = localStorage.getItem('token');
-    if (token) {
-      setIsLoggedIn(true);
-    }
-  }, []);
-
-  const handleSignup = async (userData: any) => {
-    try {
-      // You might want to store additional user data in Firestore here
-      const userDoc = doc(db, 'users', userData.uid);
-      await setDoc(userDoc, {
-        firstName: userData.firstName,
-        lastName: userData.lastName,
-        email: userData.email,
-        createdAt: serverTimestamp(),
-      });
-
-      setIsLoggedIn(true);
-      setShowSignupModal(false);
-      toast.success('Signed up successfully!');
-    } catch (error: any) {
-      toast.error('Error completing signup: ' + error.message);
-      console.error('Error storing user data:', error);
-    }
-  };
-
   const handleLogout = async () => {
     try {
-      await logout();
-      toast.success('Logged out successfully');
-    } catch (error: any) {
-      toast.error('Error logging out: ' + error.message);
+      await auth.signOut();
+    } catch (error) {
+      console.error('Error logging out:', error);
     }
   };
 
   return (
     <div className="home-page">
       <Navbar
-        setShowLoginModal={setShowLoginModal}
-        setShowSignupModal={setShowSignupModal}
         isScrolled={isScrolled}
         scrollDirection={scrollDirection}
-        isLoggedIn={isLoggedIn}
+        isLoggedIn={!!user}
         onLogout={handleLogout}
       />
 
-      {!isLoggedIn && (
-        <div className="auth-buttons">
-          <button onClick={() => setShowLoginModal(true)}>Login</button>
-          <button onClick={() => setShowSignupModal(true)}>Sign Up</button>
-        </div>
-      )}
-
-      {/* Hero Section */}
       <div className="hero-section">
         <div className="wave-background">
           {[1, 2, 3, 4].map((num) => (
@@ -308,27 +260,6 @@ print(f"Sum of positive numbers: {result}")`}
       </section>
 
       <Footer />
-
-      {showLoginModal && (
-        <LoginModal 
-          onClose={() => setShowLoginModal(false)}
-          onSwitch={() => {
-            setShowLoginModal(false);
-            setShowSignupModal(true);
-          }}
-        />
-      )}
-
-      {showSignupModal && (
-        <SignupModal 
-          onClose={() => setShowSignupModal(false)}
-          onSwitch={() => {
-            setShowSignupModal(false);
-            setShowLoginModal(true);
-          }}
-          onSignup={handleSignup}
-        />
-      )}
     </div>
   );
 };

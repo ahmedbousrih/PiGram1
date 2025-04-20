@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import styled from 'styled-components';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Navbar from '../components/navbar';
 import Footer from '../components/footer';
 import { useAuth } from '../context/AuthContext';
 import { FaSquareRootAlt, FaCode, FaHtml5, FaJs } from 'react-icons/fa';
+import { auth } from '../config/firebase';
 
 const Container = styled.div`
   padding-top: 80px;
@@ -123,90 +124,77 @@ const CourseDescription = styled.p`
   line-height: 1.5;
 `;
 
-const CoursesPage: React.FC = () => {
-  const { isLoggedIn } = useAuth();
+const SubjectsGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 24px;
+`;
 
-  const courses = {
-    mathematics: [
-      {
-        id: 'math-beg',
-        title: 'Basic Mathematics',
-        description: 'Learn fundamental mathematical concepts including arithmetic, algebra, and geometry.',
-        level: 'Beginner',
-        path: '/courses/mathematics/beginner'
-      },
-      {
-        id: 'math-int',
-        title: 'Intermediate Mathematics',
-        description: 'Explore trigonometry, calculus, and probability concepts.',
-        level: 'Intermediate',
-        path: '/courses/mathematics/intermediate'
-      },
-      {
-        id: 'math-adv',
-        title: 'Advanced Mathematics',
-        description: 'Master complex mathematical topics including differential equations and linear algebra.',
-        level: 'Advanced',
-        path: '/courses/mathematics/advanced'
-      }
-    ],
-    python: [
-      {
-        id: 'py-beg',
-        title: 'Python Fundamentals',
-        description: 'Start your programming journey with Python basics and core concepts.',
-        level: 'Beginner',
-        path: '/courses/python/beginner'
-      },
-      {
-        id: 'py-int',
-        title: 'Python Applications',
-        description: 'Build real-world applications and learn advanced Python features.',
-        level: 'Intermediate',
-        path: '/courses/python/intermediate'
-      },
-      {
-        id: 'py-adv',
-        title: 'Python Mastery',
-        description: 'Deep dive into advanced Python concepts, design patterns, and optimization.',
-        level: 'Advanced',
-        path: '/courses/python/advanced'
-      }
-    ],
-    webdev: [
-      {
-        id: 'html-beg',
-        title: 'HTML & CSS Basics',
-        description: 'Learn the fundamentals of web development with HTML and CSS.',
-        level: 'Beginner',
-        path: '/courses/html/beginner'
-      },
-      {
-        id: 'js-beg',
-        title: 'JavaScript Essentials',
-        description: 'Master the basics of JavaScript programming.',
-        level: 'Beginner',
-        path: '/courses/javascript/beginner'
-      },
-      {
-        id: 'js-int',
-        title: 'Advanced JavaScript',
-        description: 'Learn advanced JavaScript concepts and modern ES6+ features.',
-        level: 'Intermediate',
-        path: '/courses/javascript/intermediate'
-      }
-    ]
+const SubjectCard = styled.div`
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  cursor: pointer;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
+  }
+`;
+
+const SubjectDescription = styled.p`
+  font-size: 14px;
+  color: #6b7280;
+  line-height: 1.5;
+`;
+
+const CoursesPage: React.FC = () => {
+  const { user } = useAuth();
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [scrollDirection, setScrollDirection] = useState<'up' | 'down' | null>(null);
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    try {
+      await auth.signOut();
+    } catch (error) {
+      console.error('Error logging out:', error);
+    }
   };
+
+  const subjects = [
+    {
+      id: 'mathematics',
+      title: 'Mathematics',
+      icon: <FaSquareRootAlt />,
+      description: 'Comprehensive mathematics courses from basic to advanced concepts.',
+      path: '/courses/mathematics'
+    },
+    {
+      id: 'python',
+      title: 'Python Programming',
+      icon: <FaCode />,
+      description: 'Learn Python programming from fundamentals to advanced applications.',
+      path: '/courses/python'
+    },
+    {
+      id: 'webdev',
+      title: 'Web Development',
+      icon: <><FaHtml5 style={{ marginRight: '8px' }} /><FaJs /></>,
+      description: 'Master web development with HTML, CSS, and JavaScript.',
+      path: '/courses/webdev'
+    }
+  ];
 
   return (
     <>
       <Navbar
-        setShowLoginModal={() => {}}
-        setShowSignupModal={() => {}}
-        isScrolled={false}
-        scrollDirection={null}
-        isLoggedIn={isLoggedIn}
-        onLogout={() => {}}
+        isScrolled={isScrolled}
+        scrollDirection={scrollDirection}
+        isLoggedIn={!!user}
+        onLogout={handleLogout}
       />
       <Container>
         <Content>
@@ -217,66 +205,17 @@ const CoursesPage: React.FC = () => {
             </Subtitle>
           </Header>
 
-          <SubjectSection>
-            <SubjectHeader>
-              <SubjectIcon>
-                <FaSquareRootAlt />
-              </SubjectIcon>
-              <SubjectTitle>Mathematics</SubjectTitle>
-            </SubjectHeader>
-            <CourseGrid>
-              {courses.mathematics.map(course => (
-                <CourseCard key={course.id} to={course.path}>
-                  <DifficultyBadge $level={course.level}>
-                    {course.level}
-                  </DifficultyBadge>
-                  <CourseTitle>{course.title}</CourseTitle>
-                  <CourseDescription>{course.description}</CourseDescription>
-                </CourseCard>
-              ))}
-            </CourseGrid>
-          </SubjectSection>
-
-          <SubjectSection>
-            <SubjectHeader>
-              <SubjectIcon>
-                <FaCode />
-              </SubjectIcon>
-              <SubjectTitle>Python Programming</SubjectTitle>
-            </SubjectHeader>
-            <CourseGrid>
-              {courses.python.map(course => (
-                <CourseCard key={course.id} to={course.path}>
-                  <DifficultyBadge $level={course.level}>
-                    {course.level}
-                  </DifficultyBadge>
-                  <CourseTitle>{course.title}</CourseTitle>
-                  <CourseDescription>{course.description}</CourseDescription>
-                </CourseCard>
-              ))}
-            </CourseGrid>
-          </SubjectSection>
-
-          <SubjectSection>
-            <SubjectHeader>
-              <SubjectIcon>
-                <FaHtml5 style={{ marginRight: '8px' }} />
-                <FaJs />
-              </SubjectIcon>
-              <SubjectTitle>Web Development</SubjectTitle>
-            </SubjectHeader>
-            <CourseGrid>
-              {courses.webdev.map(course => (
-                <CourseCard key={course.id} to={course.path}>
-                  <DifficultyBadge $level={course.level}>
-                    {course.level}
-                  </DifficultyBadge>
-                  <CourseTitle>{course.title}</CourseTitle>
-                  <CourseDescription>{course.description}</CourseDescription>
-                </CourseCard>
-              ))}
-            </CourseGrid>
-          </SubjectSection>
+          <SubjectsGrid>
+            {subjects.map(subject => (
+              <SubjectCard key={subject.id} onClick={() => navigate(subject.path)}>
+                <SubjectIcon>{subject.icon}</SubjectIcon>
+                <div>
+                  <SubjectTitle>{subject.title}</SubjectTitle>
+                  <SubjectDescription>{subject.description}</SubjectDescription>
+                </div>
+              </SubjectCard>
+            ))}
+          </SubjectsGrid>
         </Content>
       </Container>
       <Footer />
