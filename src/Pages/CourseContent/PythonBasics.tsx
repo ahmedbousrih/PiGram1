@@ -4,7 +4,7 @@ import Navbar from '../../components/navbar';
 import Footer from '../../components/footer';
 import { useAuth } from '../../context/AuthContext';
 import { useCourseProgress } from '../../context/CourseProgressContext';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate as useNav } from 'react-router-dom';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
@@ -865,7 +865,7 @@ const PythonBasics: React.FC = () => {
   } = useCourseProgress();
   const contentRef = useRef<HTMLDivElement>(null);
   const courseId = 'python-basics';
-  const navigate = useNavigate();
+  const navigate = useNav();
   const [expandedModule, setExpandedModule] = useState<string | null>(null);
 
   // Set initial active section
