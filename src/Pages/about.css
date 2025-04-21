@@ -62,14 +62,57 @@
 
 .team-title {
   text-align: center;
-  margin-bottom: 1rem;
+  margin: 3rem 0 2rem;
+  font-size: 2rem;
+  color: #2d3748;
 }
 
 .team-grid {
   display: flex;
   justify-content: center;
-  gap: 2rem;
-  flex-wrap: wrap;
+  gap: 1.5rem;
+  padding: 0 2rem;
+  margin: 0 auto;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+.team-grid::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+.team-card {
+  background: #f8f9fe;
+  border-radius: 12px;
+  padding: 2rem;
+  text-align: center;
+  transition: transform 0.2s ease-in-out;
+  flex: 0 0 280px;
+  min-width: 280px;
+}
+
+.team-card:hover {
+  transform: translateY(-5px);
+}
+
+.team-card h3 {
+  color: #6c63ff;
+  font-size: 1.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.team-card .role {
+  color: #4a5568;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.team-card .description {
+  color: #718096;
+  font-size: 0.95rem;
+  line-height: 1.5;
 }
 
 .team-member {

@@ -2,9 +2,6 @@ import React, { useState } from 'react';
 import Navbar from '../components/navbar';
 import Footer from '../components/footer';
 import './about.css';
-import mibounImage from '../Pictures/ahmed.jpg';
-import eesaaaImage from '../Pictures/isa.jpg';
-import frmboyImage from '../Pictures/melki.jpg';
 import { useAuth } from '../context/AuthContext';
 import { auth } from '../config/firebase';
 
@@ -62,20 +59,30 @@ const About: React.FC = () => {
 
           <h2 className="team-title">Our Team</h2>
           <div className="team-grid">
-            <div className="team-member">
-              <img src={mibounImage} alt="Ahmed Riyadh Bousrih" />
+            <div className="team-card">
               <h3>Ahmed Riyadh Bousrih</h3>
-              <p>CEO & Founder</p>
+              <p className="role">CEO & Founder</p>
+              <p className="description">Passionate about education technology and making learning accessible to everyone.</p>
             </div>
-            <div className="team-member">
-              <img src={eesaaaImage} alt="Eesa Khalid Al-Bulushi" />
+            <div className="team-card">
               <h3>Eesa Khalid Al-Bulushi</h3>
-              <p>CEO & Founder</p>
+              <p className="role">CEO & Founder</p>
+              <p className="description">Expert in curriculum development with a focus on interactive learning experiences.</p>
             </div>
-            <div className="team-member">
-              <img src={frmboyImage} alt="Ameen Melki" />
+            <div className="team-card">
               <h3>Ameen Melki</h3>
-              <p>CEO & Founder</p>
+              <p className="role">CEO & Founder</p>
+              <p className="description">Specialized in creating engaging educational content and learning methodologies.</p>
+            </div>
+            <div className="team-card">
+              <h3>Ali Jawad Habash</h3>
+              <p className="role">CTO & Co-Founder</p>
+              <p className="description">Technology leader with expertise in building educational platforms and interactive learning tools.</p>
+            </div>
+            <div className="team-card">
+              <h3>Younis Mohammed Salman</h3>
+              <p className="role">COO & Co-Founder</p>
+              <p className="description">Operations specialist focused on making educational content accessible and engaging for all users.</p>
             </div>
           </div>
         </div>

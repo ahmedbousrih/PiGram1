@@ -12,10 +12,16 @@ import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 // Styled Components
 const ContentSection = styled.div`
   padding: 20px;
+  max-width: 900px;
+  margin: 0 auto;
 `;
 
 const Section = styled.section`
   margin-bottom: 40px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: 24px;
 `;
 
 const ExampleBox = styled.div`
@@ -28,15 +34,28 @@ const ExampleBox = styled.div`
 
 const QuizContainer = styled.div`
   background: #2b3245;
-  border-radius: 8px;
-  padding: 24px;
-  margin: 20px 0;
+  border-radius: 12px;
+  padding: 32px;
+  margin: 32px 0;
   color: white;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 `;
 
 const QuizTitle = styled.h3`
   color: white;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
+  font-size: 1.25rem;
+  font-weight: 500;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  span {
+    font-size: 0.875rem;
+    padding: 4px 8px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.1);
+  }
 `;
 
 const AnswerOption = styled.div<{ $selected?: boolean; $correct?: boolean; $incorrect?: boolean }>`
@@ -47,41 +66,56 @@ const AnswerOption = styled.div<{ $selected?: boolean; $correct?: boolean; $inco
     'rgba(255, 255, 255, 0.1)'
   };
   border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 4px;
-  padding: 12px 16px;
-  margin: 8px 0;
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin: 12px 0;
   cursor: pointer;
   transition: all 0.2s;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  &:before {
+    content: ${props => 
+      props.$correct ? '"✓"' :
+      props.$incorrect ? '"✗"' :
+      '""'
+    };
+    font-weight: bold;
+  }
 
   &:hover {
     background: ${props => 
       props.$correct || props.$incorrect ? 'none' :
       'rgba(255, 255, 255, 0.2)'
     };
+    transform: translateY(-1px);
   }
 `;
 
 const SubmitButton = styled.button`
-  background: #00c853;
+  background: #6c63ff;
   color: white;
   border: none;
-  border-radius: 4px;
+  border-radius: 8px;
   padding: 12px 24px;
-  margin-top: 16px;
+  margin-top: 20px;
   cursor: pointer;
   font-weight: 500;
+  transition: all 0.2s;
 
   &:hover {
-    background: #00b848;
+    background: #5b52e7;
+    transform: translateY(-1px);
   }
 `;
 
 const ContentTitle = styled.h1`
   font-size: 2.5rem;
   color: #2d3748;
-  margin-bottom: 1rem;
-  border-bottom: 3px solid #6c63ff;
-  padding-bottom: 0.5rem;
+  margin-bottom: 1.5rem;
+  font-weight: 600;
 `;
 
 const ContentDescription = styled.p`
@@ -95,12 +129,14 @@ const TopicTitle = styled.h2`
   font-size: 1.8rem;
   color: #2d3748;
   margin: 2rem 0 1rem;
+  font-weight: 500;
 `;
 
 const SubTopicTitle = styled.h3`
   font-size: 1.4rem;
   color: #4a5568;
   margin: 1.5rem 0 1rem;
+  font-weight: 500;
 `;
 
 const List = styled.ul`
@@ -113,6 +149,7 @@ const List = styled.ul`
     color: #4a5568;
     position: relative;
     padding-left: 1.5rem;
+    line-height: 1.6;
     
     &:before {
       content: "•";
@@ -144,18 +181,18 @@ const EditorTitle = styled.span`
   font-size: 0.9rem;
 `;
 
-const RunButton = styled.button`
-  background: #6c63ff;
+const RunButton = styled.button<{ disabled?: boolean }>`
+  background: ${props => props.disabled ? '#9ca3af' : '#6c63ff'};
   color: white;
   border: none;
   padding: 0.5rem 1rem;
   border-radius: 4px;
-  cursor: pointer;
+  cursor: ${props => props.disabled ? 'not-allowed' : 'pointer'};
   font-weight: 500;
   transition: background 0.2s;
 
   &:hover {
-    background: #5a51d6;
+    background: ${props => props.disabled ? '#9ca3af' : '#5a51d6'};
   }
 `;
 
@@ -169,6 +206,18 @@ const OutputWindow = styled.div`
   overflow-y: auto;
 `;
 
+const ErrorMessage = styled.pre`
+  color: #ff4444;
+  margin: 0;
+  white-space: pre-wrap;
+`;
+
+const OutputText = styled.pre`
+  color: #00ff00;
+  margin: 0;
+  white-space: pre-wrap;
+`;
+
 // Move the CodeEditor component and its interface before courseContent
 interface CodeEditorProps {
   initialCode: string;
@@ -178,18 +227,51 @@ interface CodeEditorProps {
 const CodeEditor: React.FC<CodeEditorProps> = ({ initialCode, title = "Python Editor" }) => {
   const [code, setCode] = useState(initialCode);
   const [output, setOutput] = useState("");
+  const [isRunning, setIsRunning] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleRunCode = () => {
-    // In a real implementation, you would send this to a backend service
-    // For now, we'll just show the code as output
-    setOutput(`Output:\n${code}`);
+  const handleRunCode = async () => {
+    setIsRunning(true);
+    setError(null);
+    setOutput("");
+
+    try {
+      const response = await fetch('/api/python-runner', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ code }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to execute code');
+      }
+
+      if (data.error) {
+        setError(data.error);
+      } else {
+        setOutput(data.output);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+    } finally {
+      setIsRunning(false);
+    }
   };
 
   return (
     <CodeEditorWrapper>
       <EditorHeader>
         <EditorTitle>{title}</EditorTitle>
-        <RunButton onClick={handleRunCode}>Run ▶</RunButton>
+        <RunButton 
+          onClick={handleRunCode} 
+          disabled={isRunning}
+        >
+          {isRunning ? 'Running...' : 'Run ▶'}
+        </RunButton>
       </EditorHeader>
       <SyntaxHighlighter
         language="python"
@@ -204,7 +286,11 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ initialCode, title = "Python Ed
         {code}
       </SyntaxHighlighter>
       <OutputWindow>
-        {output}
+        {error ? (
+          <ErrorMessage>{error}</ErrorMessage>
+        ) : (
+          output && <OutputText>{output}</OutputText>
+        )}
       </OutputWindow>
     </CodeEditorWrapper>
   );
@@ -337,6 +423,24 @@ print(f"Nice to meet you, {name}!")`}
                   </List>
                 </ExampleBox>
 
+                <TopicTitle>Python Versions</TopicTitle>
+                <ExampleBox>
+                  <SubTopicTitle>Python 3 (Current)</SubTopicTitle>
+                  <List>
+                    <li>The current and recommended version</li>
+                    <li>Includes the latest features and improvements</li>
+                    <li>Better Unicode support</li>
+                    <li>More intuitive integer division</li>
+                  </List>
+
+                  <SubTopicTitle>Python 2 (Legacy)</SubTopicTitle>
+                  <List>
+                    <li>No longer maintained (since January 2020)</li>
+                    <li>Only receives security updates</li>
+                    <li>Still used in some legacy systems</li>
+                  </List>
+                </ExampleBox>
+
                 <Quiz
                   id="intro1"
                   sectionId="what-is-python"
@@ -349,42 +453,6 @@ print(f"Nice to meet you, {name}!")`}
                   ]}
                   correctAnswer="Mobile app development"
                   explanation="While Python can be used for mobile development, it's not a common choice. Languages like Swift (iOS) and Kotlin/Java (Android) are more typically used for mobile app development."
-                  difficulty="easy"
-                />
-              </Section>
-
-              <Section>
-                <h2>Python Versions</h2>
-                <p>Python has two major versions:</p>
-                <ExampleBox>
-                  <h3>Python 3 (Current)</h3>
-                  <ul>
-                    <li>The current and recommended version</li>
-                    <li>Includes the latest features and improvements</li>
-                    <li>Better Unicode support</li>
-                    <li>More intuitive integer division</li>
-                  </ul>
-
-                  <h3>Python 2 (Legacy)</h3>
-                  <ul>
-                    <li>No longer maintained (since January 2020)</li>
-                    <li>Only receives security updates</li>
-                    <li>Still used in some legacy systems</li>
-                  </ul>
-                </ExampleBox>
-
-                <Quiz
-                  id="intro2"
-                  sectionId="what-is-python"
-                  question="What makes Python different from other programming languages?"
-                  options={[
-                    "It uses curly braces for code blocks",
-                    "It requires compilation before running",
-                    "It uses indentation to define code blocks",
-                    "It requires variable type declaration"
-                  ]}
-                  correctAnswer="It uses indentation to define code blocks"
-                  explanation="Python is unique in using indentation (whitespace) to define code blocks, while most other languages use curly braces or keywords. This enforces clean, readable code."
                   difficulty="easy"
                 />
               </Section>
