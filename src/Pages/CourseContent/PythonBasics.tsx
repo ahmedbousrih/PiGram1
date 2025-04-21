@@ -233,8 +233,13 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ initialCode, title = "Python Ed
   const handleRunCode = async () => {
     setIsRunning(true);
     setError(null);
-    setOutput("");
-
+    
+    // In production deployment, show a message that execution is not available
+    setOutput("Code execution is only available in the development environment.\n\nPlease try running this code in a Python environment like:\n- replit.com\n- jupyter.org\n- pythontutor.com");
+    
+    setIsRunning(false);
+    
+    /* Comment out the actual API call that won't work in production
     try {
       const response = await fetch('/api/python-runner', {
         method: 'POST',
@@ -260,6 +265,7 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ initialCode, title = "Python Ed
     } finally {
       setIsRunning(false);
     }
+    */
   };
 
   return (
