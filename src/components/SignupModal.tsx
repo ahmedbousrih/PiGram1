@@ -7,6 +7,7 @@ import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-toastify';
 import { FaGoogle, FaFacebook, FaApple } from 'react-icons/fa';
 import { useModal } from '../context/ModalContext';
+import { IconType } from 'react-icons';
 
 const ModalOverlay = styled.div`
   position: fixed;
@@ -121,12 +122,22 @@ const SocialButton = styled(Button)<{ $provider: string }>`
     props.$provider === 'apple' ? '#000' : 'white'};
   color: ${props => props.$provider === 'google' ? '#333' : 'white'};
   border: ${props => props.$provider === 'google' ? '1px solid #ddd' : 'none'};
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  margin-bottom: 0.75rem;
   
   &:hover {
     background: ${props => 
       props.$provider === 'google' ? '#f5f5f5' : 
       props.$provider === 'facebook' ? '#1664d9' : 
       props.$provider === 'apple' ? '#1a1a1a' : '#f5f5f5'};
+  }
+
+  svg {
+    width: 20px;
+    height: 20px;
   }
 `;
 
@@ -331,28 +342,28 @@ const SignupModal: React.FC = () => {
         <Divider><span>or sign up with</span></Divider>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-          <SocialButton 
+          <SocialButton
             type="button"
             $provider="google"
             onClick={() => handleSocialSignup('google')}
           >
-            <FaGoogle /> Continue with Google
+            <FaGoogle size={20} /> Continue with Google
           </SocialButton>
           
-          <SocialButton 
+          <SocialButton
             type="button"
             $provider="facebook"
             onClick={() => handleSocialSignup('facebook')}
           >
-            <FaFacebook /> Continue with Facebook
+            <FaFacebook size={20} /> Continue with Facebook
           </SocialButton>
           
-          <SocialButton 
+          <SocialButton
             type="button"
             $provider="apple"
             onClick={() => handleSocialSignup('apple')}
           >
-            <FaApple /> Continue with Apple
+            <FaApple size={20} /> Continue with Apple
           </SocialButton>
         </div>
 

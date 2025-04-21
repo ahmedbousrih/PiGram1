@@ -7,6 +7,7 @@ import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-toastify';
 import { FaGoogle, FaFacebook, FaApple } from 'react-icons/fa';
 import { useModal } from '../context/ModalContext';
+import { IconType } from 'react-icons';
 
 const ModalOverlay = styled.div`
   position: fixed;
@@ -110,12 +111,22 @@ const SocialButton = styled(Button)<{ $provider: string }>`
     props.$provider === 'apple' ? '#000' : 'white'};
   color: ${props => props.$provider === 'google' ? '#333' : 'white'};
   border: ${props => props.$provider === 'google' ? '1px solid #ddd' : 'none'};
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  margin-bottom: 0.75rem;
   
   &:hover {
     background: ${props => 
       props.$provider === 'google' ? '#f5f5f5' : 
       props.$provider === 'facebook' ? '#1664d9' : 
       props.$provider === 'apple' ? '#1a1a1a' : '#f5f5f5'};
+  }
+
+  svg {
+    width: 20px;
+    height: 20px;
   }
 `;
 
@@ -152,7 +163,7 @@ const CloseButton = styled.button`
 `;
 
 const LoginModal: React.FC = () => {
-  const { showLoginModal, setShowLoginModal, closeAllModals } = useModal();
+  const { showLoginModal, setShowLoginModal, setShowSignupModal, closeAllModals } = useModal();
   const { login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -280,63 +291,66 @@ const LoginModal: React.FC = () => {
   };
 
   return (
-    <ModalOverlay onClick={() => closeAllModals()}>
+    <ModalOverlay onClick={closeAllModals}>
       <ModalContent onClick={e => e.stopPropagation()}>
-        <CloseButton onClick={() => closeAllModals()}>×</CloseButton>
+        <CloseButton onClick={closeAllModals}>×</CloseButton>
         <Title>Welcome Back</Title>
-
         <StyledForm onSubmit={handleEmailLogin}>
-            <Input
-              type="email"
-              placeholder="Email"
+          <Input
+            type="email"
+            placeholder="Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          
-            <Input
+            required
+          />
+          <Input
             type="password"
-              placeholder="Password"
+            placeholder="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-          
+            required
+          />
           <SubmitButton type="submit" disabled={isLoading}>
-            {isLoading ? 'Logging in...' : 'Continue with email'}
+            {isLoading ? 'Logging in...' : 'Login'}
           </SubmitButton>
         </StyledForm>
 
-        <Divider><span>or continue with</span></Divider>
+        <Divider>
+          <span>or continue with</span>
+        </Divider>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-          <SocialButton 
-            type="button"
-            $provider="google" 
-            onClick={() => handleSocialLogin('google')}
-          >
-            <FaGoogle /> Continue with Google
-          </SocialButton>
-          
-          <SocialButton 
-            type="button"
-            $provider="facebook"
-            onClick={() => handleSocialLogin('facebook')}
-          >
-            <FaFacebook /> Continue with Facebook
-          </SocialButton>
-          
-          <SocialButton 
-            type="button"
-            $provider="apple"
-            onClick={() => handleSocialLogin('apple')}
-          >
-            <FaApple /> Continue with Apple
-          </SocialButton>
-        </div>
+        <SocialButton
+          type="button"
+          $provider="google"
+          onClick={() => handleSocialLogin('google')}
+        >
+          <FaGoogle size={20} /> Continue with Google
+        </SocialButton>
+
+        <SocialButton
+          type="button"
+          $provider="facebook"
+          onClick={() => handleSocialLogin('facebook')}
+        >
+          <FaFacebook size={20} /> Continue with Facebook
+        </SocialButton>
+
+        <SocialButton
+          type="button"
+          $provider="apple"
+          onClick={() => handleSocialLogin('apple')}
+        >
+          <FaApple size={20} /> Continue with Apple
+        </SocialButton>
 
         <Footer>
-          Don't have an account? <a onClick={() => setShowLoginModal(false)}>Sign up</a>
+          Don't have an account?{' '}
+          <a onClick={() => {
+            setShowLoginModal(false);
+            setShowSignupModal(true);
+          }}>
+            Sign up
+          </a>
         </Footer>
       </ModalContent>
     </ModalOverlay>
