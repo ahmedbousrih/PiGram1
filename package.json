@@ -28,6 +28,7 @@
     "react-scripts": "^5.0.1",
     "react-syntax-highlighter": "^15.6.1",
     "react-toastify": "^11.0.5",
+    "serve": "^14.2.1",
     "styled-components": "^6.1.15",
     "typescript": "^4.9.5",
     "web-vitals": "^4.2.4"
@@ -37,7 +38,9 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "vercel-build": "CI=false npm run build"
+    "vercel-build": "CI=false npm run build && npm run vercel-post-build",
+    "vercel-post-build": "echo 'Vercel build completed'",
+    "vercel-start": "serve -s build"
   },
   "eslintConfig": {
     "extends": [
