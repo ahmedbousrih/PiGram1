@@ -17,23 +17,28 @@
       "continue": true
     },
     {
-      "src": "/favicon.ico",
-      "dest": "/favicon.ico"
-    },
-    {
       "src": "/manifest.json",
+      "headers": { "cache-control": "public, max-age=31536000, immutable" },
       "dest": "/manifest.json"
     },
     {
+      "src": "/favicon.ico",
+      "headers": { "cache-control": "public, max-age=31536000, immutable" },
+      "dest": "/favicon.ico"
+    },
+    {
       "src": "/robots.txt",
+      "headers": { "cache-control": "public, max-age=31536000, immutable" },
       "dest": "/robots.txt"
     },
     {
       "src": "/logo192.png",
+      "headers": { "cache-control": "public, max-age=31536000, immutable" },
       "dest": "/logo192.png"
     },
     {
       "src": "/logo512.png",
+      "headers": { "cache-control": "public, max-age=31536000, immutable" },
       "dest": "/logo512.png"
     },
     {
