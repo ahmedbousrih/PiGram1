@@ -1,5 +1,5 @@
 import React from 'react';
-import { HashRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import HomePage from './Pages/homePage';
 import ProfileSettings from './Pages/ProfileSettings';
 import './App.css';
@@ -40,6 +40,7 @@ const AppContent: React.FC = () => {
         <Route path="/courses/python/*" element={<PythonBasics />} />
         <Route path="/services" element={<ServicesPage />} />
         <Route path="/progress" element={<ProgressDashboard />} />
+        <Route path="*" element={<HomePage />} />
       </Routes>
     </Router>
   );
