@@ -123,3 +123,40 @@ body {
 .try-button:hover {
   background-color: #218838;
 }
+
+/* Toast Notification Styles */
+.Toastify__toast {
+  background-color: var(--dropdown-bg) !important;
+  color: var(--text-primary) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1) !important;
+}
+
+.Toastify__toast--success {
+  border-left: 4px solid #28a745 !important;
+}
+
+.Toastify__toast--error {
+  border-left: 4px solid #dc3545 !important;
+}
+
+.Toastify__toast--warning {
+  border-left: 4px solid #ffc107 !important;
+}
+
+.Toastify__toast--info {
+  border-left: 4px solid #17a2b8 !important;
+}
+
+.Toastify__close-button {
+  color: var(--text-primary) !important;
+}
+
+.Toastify__progress-bar {
+  background: var(--text-primary) !important;
+}
+
+/* Ensure toast container is always on top */
+.Toastify__toast-container {
+  z-index: 10000 !important;
+}

@@ -18,12 +18,20 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 
-const analytics = typeof window !== 'undefined' ? getAnalytics(app) : null;
-
 // Initialize services
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 export const storage = getStorage(app);
+
+// Initialize analytics only in browser environment
+let analytics = null;
+if (typeof window !== 'undefined') {
+  try {
+    analytics = getAnalytics(app);
+  } catch (error) {
+    console.error('Failed to initialize analytics:', error);
+  }
+}
 
 // Add auth state observer
 onAuthStateChanged(auth, (user) => {

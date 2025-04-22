@@ -21,7 +21,6 @@ import { CourseProgressProvider } from './context/CourseProgressContext';
 import { ModalProvider } from './context/ModalContext';
 import LoginModal from './components/LoginModal';
 import SignupModal from './components/SignupModal';
-import ErrorBoundary from './components/ErrorBoundary';
 import PythonBasics from './Pages/CourseContent/PythonBasics';
 
 // Add icons to library
@@ -42,23 +41,6 @@ const AppContent: React.FC = () => {
         <Route path="/services" element={<ServicesPage />} />
         <Route path="/progress" element={<ProgressDashboard />} />
       </Routes>
-      <ToastContainer 
-        position="top-right"
-        autoClose={3000}
-        limit={1}
-        hideProgressBar={false}
-        newestOnTop
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        theme="light"
-        style={{ zIndex: 10000 }}
-        closeButton={true}
-      />
-      <LoginModal />
-      <SignupModal />
     </Router>
   );
 };
@@ -66,21 +48,36 @@ const AppContent: React.FC = () => {
 // Main App component with providers
 const App: React.FC = () => {
   return (
-    <ErrorBoundary>
-      <AuthProvider>
-        <ThemeProvider>
-          <ModalProvider>
-            <CourseProvider>
-              <CourseProgressProvider>
-                <SearchProvider>
-                  <AppContent />
-                </SearchProvider>
-              </CourseProgressProvider>
-            </CourseProvider>
-          </ModalProvider>
-        </ThemeProvider>
-      </AuthProvider>
-    </ErrorBoundary>
+    <AuthProvider>
+      <ThemeProvider>
+        <ModalProvider>
+          <CourseProvider>
+            <CourseProgressProvider>
+              <SearchProvider>
+                <AppContent />
+                <ToastContainer 
+                  position="top-right"
+                  autoClose={3000}
+                  limit={1}
+                  hideProgressBar={false}
+                  newestOnTop
+                  closeOnClick
+                  rtl={false}
+                  pauseOnFocusLoss
+                  draggable
+                  pauseOnHover
+                  theme="light"
+                  style={{ zIndex: 10000 }}
+                  closeButton={true}
+                />
+                <LoginModal />
+                <SignupModal />
+              </SearchProvider>
+            </CourseProgressProvider>
+          </CourseProvider>
+        </ModalProvider>
+      </ThemeProvider>
+    </AuthProvider>
   );
 };
 
