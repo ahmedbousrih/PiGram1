@@ -4,9 +4,8 @@
     {
       "src": "package.json",
       "use": "@vercel/static-build",
-      "config": { 
-        "distDir": "build",
-        "buildCommand": "npm run vercel-build"
+      "config": {
+        "distDir": "build"
       }
     }
   ],
@@ -46,4 +45,4 @@
       "dest": "/index.html"
     }
   ]
-} 
+}
