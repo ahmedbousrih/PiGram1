@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route } from 'react-router-dom';
 import HomePage from './Pages/homePage';
 import ProfileSettings from './Pages/ProfileSettings';
 import './App.css';
@@ -30,7 +30,7 @@ library.add(faSun, faMoon);
 // Create a new component for the app content
 const AppContent: React.FC = () => {
   return (
-    <BrowserRouter>
+    <Router>
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/profile-settings" element={<ProfileSettings />} />
@@ -59,7 +59,7 @@ const AppContent: React.FC = () => {
       />
       <LoginModal />
       <SignupModal />
-    </BrowserRouter>
+    </Router>
   );
 };
 
